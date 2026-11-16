@@ -67,11 +67,13 @@ void fluctuate(arma::vec& theta, const arma::vec& step, const arma::uvec& block,
 struct Records {
   std::vector<int> generation;
   std::vector<arma::vec> theta, mean_x, mean_z;
+  std::vector<double> mean_fitness;
   std::vector<arma::mat> G, P, G_genic;
 
   void add(int gen, const arma::vec& th, const arma::mat& X, const arma::mat& Z,
-           const Architecture& arch, const arma::cube& alleles) {
+           const Architecture& arch, const arma::cube& alleles, double w) {
     generation.push_back(gen);
+    mean_fitness.push_back(w);
     theta.push_back(th);
     mean_x.push_back(arma::mean(X, 1));
     mean_z.push_back(arma::mean(Z, 1));
@@ -94,7 +96,8 @@ struct Records {
     Rcpp::List out = Rcpp::List::create(
       Rcpp::Named("generation") = generation, Rcpp::Named("theta") = th,
       Rcpp::Named("mean_x") = mx, Rcpp::Named("mean_z") = mz,
-      Rcpp::Named("G") = g, Rcpp::Named("P") = pp);
+      Rcpp::Named("G") = g, Rcpp::Named("P") = pp,
+      Rcpp::Named("mean_fitness") = mean_fitness);
     if (has_genic) out["G_genic"] = gg;
     return out;
   }
@@ -144,7 +147,16 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
 
   Records rec;
   arma::vec theta = Rcpp::as<arma::vec>(Rcpp::as<Rcpp::List>(regimes[0])["theta"]);
-  if (record_start) rec.add(generation, theta, X, Z, *arch, alleles);
+  // mean fitness on the current surface (NA without selection)
+  auto mean_fitness = [&](bool selective, const arma::mat& omega) {
+    if (!selective) return NA_REAL;
+    return arma::mean(arma::exp(GaussianFitness(theta, omega).log_fitness(Z)));
+  };
+  if (record_start) {
+    Rcpp::List r0 = regimes[0];
+    rec.add(generation, theta, X, Z, *arch, alleles,
+            mean_fitness(Rcpp::as<bool>(r0["selective"]), Rcpp::as<arma::mat>(r0["omega"])));
+  }
 
   arma::cube offspring(alleles.n_rows, n_alleles, n);
   arma::vec w(n);
@@ -183,7 +195,8 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
       alleles.swap(offspring);
       phenotypes(*arch, env_sd, alleles, X, Z);
       ++generation;
-      if (generation % record_every == 0) rec.add(generation, theta, X, Z, *arch, alleles);
+      if (generation % record_every == 0)
+        rec.add(generation, theta, X, Z, *arch, alleles, mean_fitness(selective, omega));
     }
   }
 

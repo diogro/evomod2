@@ -4,12 +4,20 @@
 \alias{architectures}
 \alias{additive}
 \alias{binary_b}
+\alias{contribution_matrix}
 \alias{multilinear}
 \title{Genetic architectures}
 \usage{
 additive(loci, traits)
 
 binary_b(loci, traits, init_b = 0.25, init_y = c("normal", "mutations"))
+
+contribution_matrix(
+  traits,
+  genes = traits,
+  init_weights = rep(1, genes),
+  init_contributions = diag(1, traits, genes)
+)
 
 multilinear(loci, traits, epsilon)
 }
@@ -25,6 +33,14 @@ multilinear(loci, traits, epsilon)
 the model's \code{init_sd}: \code{"normal"}, \code{Normal(0, init_sd)} for every allele;
 \code{"mutations"}, as in the C code, \verb{2 x loci} mutations of
 \code{Normal(0, init_sd)} added to alleles chosen at random in each genome.}
+
+\item{genes}{number of weight genes.}
+
+\item{init_weights}{starting values of the weight genes (one per gene).}
+
+\item{init_contributions}{starting contribution matrix (\verb{traits x genes});
+by default ones on the diagonal (gene \code{j} affects trait \code{j} only, the
+identity when \code{genes == traits}).}
 
 \item{epsilon}{epistasis tensor, a \verb{traits x traits x traits} array
 (see \code{\link[=random_epsilon]{random_epsilon()}}).}
@@ -46,6 +62,16 @@ effects are zero.
 (2015). Each allele has a scalar effect \code{y} and a column of a binary
 matrix \code{B} saying which traits it affects; \verb{x = B y}. Use with
 \code{\link[=binary_b_mutation]{binary_b_mutation()}}. Genomes have \code{traits + 1} rows: \code{y}, then \code{B}.
+\item \code{contribution_matrix()}: the model of do O & Whitlock (2023). \code{genes}
+weight genes \code{a_j} and a \verb{traits x genes} matrix of contribution genes
+\code{c_ij}, each its own locus with a scalar value (the two alleles of a
+locus are summed); \verb{x_i = sum_j c_ij a_j}. Pleiotropy (\code{C}) evolves
+continuously and can be negative, and the map is bilinear (epistasis
+between weight and contribution genes). Loci \verb{1..genes} are the weight
+genes; locus \code{genes + (j - 1) * traits + i} is \code{c_ij}. Use with
+\code{\link[=contribution_mutation]{contribution_mutation()}}. New populations start with every individual
+at \code{init_weights} and \code{init_contributions} (each allele half of the
+locus value), plus \code{Normal(0, init_sd)} noise on every allele.
 \item \code{multilinear()}: pairwise multilinear epistasis (Hansen & Wagner 2001),
 \verb{x = S + sum_\{i<j\} eps(Y_i, Y_j)}, with \verb{S = sum_l Y_l} and
 \verb{eps(a, b)[k] = sum_\{l,m\} epsilon[k, l, m] a[l] b[m]}. The same tensor is
@@ -55,5 +81,6 @@ used for every pair of loci and must be symmetric in its last two indices.
 \examples{
 additive(loci = 50, traits = 2)
 binary_b(loci = 50, traits = 4)
+contribution_matrix(traits = 4)
 multilinear(loci = 50, traits = 2, epsilon = random_epsilon(2, sd = 0.05))
 }

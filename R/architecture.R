@@ -11,6 +11,16 @@
 #'   (2015). Each allele has a scalar effect `y` and a column of a binary
 #'   matrix `B` saying which traits it affects; `x = B y`. Use with
 #'   [binary_b_mutation()]. Genomes have `traits + 1` rows: `y`, then `B`.
+#' * `contribution_matrix()`: the model of do O & Whitlock (2023). `genes`
+#'   weight genes `a_j` and a `traits x genes` matrix of contribution genes
+#'   `c_ij`, each its own locus with a scalar value (the two alleles of a
+#'   locus are summed); `x_i = sum_j c_ij a_j`. Pleiotropy (`C`) evolves
+#'   continuously and can be negative, and the map is bilinear (epistasis
+#'   between weight and contribution genes). Loci `1..genes` are the weight
+#'   genes; locus `genes + (j - 1) * traits + i` is `c_ij`. Use with
+#'   [contribution_mutation()]. New populations start with every individual
+#'   at `init_weights` and `init_contributions` (each allele half of the
+#'   locus value), plus `Normal(0, init_sd)` noise on every allele.
 #' * `multilinear()`: pairwise multilinear epistasis (Hansen & Wagner 2001),
 #'   `x = S + sum_{i<j} eps(Y_i, Y_j)`, with `S = sum_l Y_l` and
 #'   `eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]`. The same tensor is
@@ -20,6 +30,11 @@
 #' @param traits number of traits.
 #' @param epsilon epistasis tensor, a `traits x traits x traits` array
 #'   (see [random_epsilon()]).
+#' @param genes number of weight genes.
+#' @param init_weights starting values of the weight genes (one per gene).
+#' @param init_contributions starting contribution matrix (`traits x genes`);
+#'   by default ones on the diagonal (gene `j` affects trait `j` only, the
+#'   identity when `genes == traits`).
 #' @param init_b probability that an entry of `B` is 1 in a new population
 #'   (0.25 in the C code, which starts from random mutations of an empty `B`).
 #' @param init_y how allelic effects `y` of a new population are drawn, with
@@ -30,6 +45,7 @@
 #' @examples
 #' additive(loci = 50, traits = 2)
 #' binary_b(loci = 50, traits = 4)
+#' contribution_matrix(traits = 4)
 #' multilinear(loci = 50, traits = 2, epsilon = random_epsilon(2, sd = 0.05))
 #' @name architectures
 NULL
@@ -55,6 +71,25 @@ binary_b <- function(loci, traits, init_b = 0.25, init_y = c("normal", "mutation
   structure(list(type = "binary_b", loci = as.integer(loci), traits = as.integer(traits),
                  state_rows = as.integer(traits) + 1L, mutation_type = "binary_b",
                  init_b = init_b, init_y = init_y),
+            class = "evomod_architecture")
+}
+
+#' @rdname architectures
+#' @export
+contribution_matrix <- function(traits, genes = traits, init_weights = rep(1, genes),
+                                init_contributions = diag(1, traits, genes)) {
+  check_count(traits, "traits")
+  check_count(genes, "genes")
+  p <- as.integer(traits); k <- as.integer(genes)
+  if (!is.numeric(init_weights) || length(init_weights) != k)
+    stop("`init_weights` must have one value per gene (", k, ")", call. = FALSE)
+  init_contributions <- as.matrix(init_contributions)
+  if (!identical(dim(init_contributions), c(p, k)))
+    stop("`init_contributions` must be a ", p, " x ", k, " matrix", call. = FALSE)
+  structure(list(type = "contribution_matrix", loci = k + p * k, traits = p, genes = k,
+                 state_rows = 1L, mutation_type = "contribution",
+                 init_weights = as.numeric(init_weights),
+                 init_contributions = init_contributions),
             class = "evomod_architecture")
 }
 
@@ -104,6 +139,11 @@ print.evomod_architecture <- function(x, ...) {
 # Genomes of a new population: genome rows x alleles x individuals.
 init_genomes <- function(arch, n, init_sd) {
   n_alleles <- 2L * arch$loci
+  if (arch$type == "contribution_matrix") {
+    values <- c(arch$init_weights, as.vector(arch$init_contributions))   # c_ij column-major
+    g <- array(rep(rep(values / 2, each = 2), n), c(1, n_alleles, n))
+    return(g + stats::rnorm(n_alleles * n, 0, init_sd))
+  }
   if (arch$type == "binary_b") {
     g <- array(0, c(arch$state_rows, n_alleles, n))
     if (arch$init_y == "normal") {

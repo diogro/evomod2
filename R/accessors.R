@@ -4,6 +4,8 @@
 #'
 #' * `trait_means()`: mean genotypic value (`mean_x`), mean phenotype
 #'   (`mean_z`) and optimum (`theta`) of each trait, in long format.
+#' * `mean_fitness()`: mean fitness of the population on the fitness surface
+#'   of the current regime (`NA` under drift).
 #' * `variances()`: additive genetic (`G`) and phenotypic (`P`) variances
 #'   and heritability (`h2`) of each trait, in long format.
 #' * `g_matrices()`, `p_matrices()`: lists of covariance matrices of genotypic
@@ -32,6 +34,12 @@ trait_means <- function(pop) {
              trait = rep(trait_names(pop), length(r$generation)),
              mean_x = as.vector(r$mean_x), mean_z = as.vector(r$mean_z),
              theta = as.vector(r$theta))
+}
+
+#' @rdname statistics
+#' @export
+mean_fitness <- function(pop) {
+  data.frame(generation = pop$records$generation, mean_fitness = pop$records$mean_fitness)
 }
 
 #' @rdname statistics

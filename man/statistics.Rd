@@ -3,12 +3,15 @@
 \name{statistics}
 \alias{statistics}
 \alias{trait_means}
+\alias{mean_fitness}
 \alias{variances}
 \alias{g_matrices}
 \alias{p_matrices}
 \title{Recorded population statistics}
 \usage{
 trait_means(pop)
+
+mean_fitness(pop)
 
 variances(pop)
 
@@ -31,6 +34,8 @@ Statistics recorded during \code{\link[=evolve]{evolve()}}, every \code{record_e
 \itemize{
 \item \code{trait_means()}: mean genotypic value (\code{mean_x}), mean phenotype
 (\code{mean_z}) and optimum (\code{theta}) of each trait, in long format.
+\item \code{mean_fitness()}: mean fitness of the population on the fitness surface
+of the current regime (\code{NA} under drift).
 \item \code{variances()}: additive genetic (\code{G}) and phenotypic (\code{P}) variances
 and heritability (\code{h2}) of each trait, in long format.
 \item \code{g_matrices()}, \code{p_matrices()}: lists of covariance matrices of genotypic

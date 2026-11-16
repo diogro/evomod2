@@ -104,7 +104,8 @@ append_records <- function(old, new) {
               theta = cbind(old$theta, new$theta),
               mean_x = cbind(old$mean_x, new$mean_x),
               mean_z = cbind(old$mean_z, new$mean_z),
-              G = bind3(old$G, new$G), P = bind3(old$P, new$P))
+              G = bind3(old$G, new$G), P = bind3(old$P, new$P),
+       mean_fitness = c(old$mean_fitness, new$mean_fitness))
   if (!is.null(old$G_genic) && !is.null(new$G_genic)) out$G_genic <- bind3(old$G_genic, new$G_genic)
   out
 }

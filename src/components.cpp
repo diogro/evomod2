@@ -79,6 +79,39 @@ arma::mat BinaryB::local_effects(const arma::mat& alleles) const {
   return L;
 }
 
+// ---- ContributionMatrix ---------------------------------------------------------
+
+void ContributionMatrix::unpack(const arma::mat& alleles, arma::vec& a, arma::mat& C) const {
+  a.set_size(k_);
+  C.set_size(p_, k_);
+  for (arma::uword j = 0; j < k_; ++j) a[j] = alleles(0, 2 * j) + alleles(0, 2 * j + 1);
+  for (arma::uword j = 0; j < k_; ++j)
+    for (arma::uword i = 0; i < p_; ++i) {
+      arma::uword l = k_ + j * p_ + i;
+      C(i, j) = alleles(0, 2 * l) + alleles(0, 2 * l + 1);
+    }
+}
+
+arma::vec ContributionMatrix::genotypic_value(const arma::mat& alleles) const {
+  arma::vec a;
+  arma::mat C;
+  unpack(alleles, a, C);
+  return C * a;
+}
+
+arma::mat ContributionMatrix::local_effects(const arma::mat& alleles) const {
+  arma::vec a;
+  arma::mat C;
+  unpack(alleles, a, C);
+  arma::mat L(p_, k_ + p_ * k_, arma::fill::zeros);
+  for (arma::uword j = 0; j < k_; ++j) {
+    L.col(j) = C.col(j) * a[j];                       // weight gene j set to 0
+    for (arma::uword i = 0; i < p_; ++i)
+      L(i, k_ + j * p_ + i) = C(i, j) * a[j];         // contribution c_ij set to 0
+  }
+  return L;
+}
+
 // ---- Mutation ---------------------------------------------------------------
 
 GaussianMutation::GaussianMutation(double rate, const arma::mat& cov) : rate_(rate) {
@@ -132,6 +165,31 @@ void BinaryBMutation::mutate(arma::mat& alleles) const {
   }
 }
 
+void ContributionMutation::mutate(arma::mat& alleles) const {
+  arma::uword w = 2 * weight_loci_, c = alleles.n_cols - w;
+  int n_w = static_cast<int>(R::rbinom(static_cast<double>(w), rate_w_));
+  for (int i = 0; i < n_w; ++i) {
+    arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * w), w - 1);
+    alleles(0, a) += sd_ * R::norm_rand();
+  }
+  int n_c = static_cast<int>(R::rbinom(static_cast<double>(c), rate_c_));
+  for (int i = 0; i < n_c; ++i) {
+    arma::uword a = w + std::min(static_cast<arma::uword>(R::unif_rand() * c), c - 1);
+    alleles(0, a) += sd_ * R::norm_rand();
+  }
+}
+
+void ContributionMutation::mutate_one(arma::mat& alleles) const {
+  arma::uword w = 2 * weight_loci_, c = alleles.n_cols - w;
+  double w_events = rate_w_ * w, c_events = rate_c_ * c;
+  arma::uword a;
+  if (R::unif_rand() * (w_events + c_events) < w_events)
+    a = std::min(static_cast<arma::uword>(R::unif_rand() * w), w - 1);
+  else
+    a = w + std::min(static_cast<arma::uword>(R::unif_rand() * c), c - 1);
+  alleles(0, a) += sd_ * R::norm_rand();
+}
+
 // ---- Fitness ----------------------------------------------------------------
 
 GaussianFitness::GaussianFitness(const arma::vec& theta, const arma::mat& omega)
@@ -176,6 +234,9 @@ std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec) {
   std::string type = Rcpp::as<std::string>(spec["type"]);
   if (type == "additive") return std::unique_ptr<Architecture>(new Additive());
   if (type == "binary_b") return std::unique_ptr<Architecture>(new BinaryB());
+  if (type == "contribution_matrix")
+    return std::unique_ptr<Architecture>(new ContributionMatrix(
+      Rcpp::as<arma::uword>(spec["traits"]), Rcpp::as<arma::uword>(spec["genes"])));
   if (type == "multilinear") {
     arma::cube epsilon = Rcpp::as<arma::cube>(spec["epsilon_slices"]);
     return std::unique_ptr<Architecture>(new Multilinear(epsilon));
@@ -192,6 +253,10 @@ std::unique_ptr<Mutation> make_mutation(const Rcpp::List& spec) {
     return std::unique_ptr<Mutation>(new BinaryBMutation(
       Rcpp::as<double>(spec["rate"]), Rcpp::as<double>(spec["sd"]),
       Rcpp::as<double>(spec["rate_b"]), Rcpp::as<bool>(spec["random_state"])));
+  if (type == "contribution")
+    return std::unique_ptr<Mutation>(new ContributionMutation(
+      Rcpp::as<double>(spec["rate_weight"]), Rcpp::as<double>(spec["rate_contribution"]),
+      Rcpp::as<double>(spec["sd"]), Rcpp::as<arma::uword>(spec["weight_loci"])));
   Rcpp::stop("unknown mutation type: " + type);
 }
 

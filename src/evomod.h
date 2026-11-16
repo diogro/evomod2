@@ -75,6 +75,20 @@ public:
   arma::mat allele_effects(const arma::mat& alleles) const override;
 };
 
+// Contribution matrix (do O & Whitlock 2023): k weight genes a_j and a
+// traits x k matrix of contribution genes c_ij, each a locus holding one scalar
+// per allele (the two alleles of a locus are summed). Loci 0..k-1 are the
+// weight genes; locus k + j * p + i is c_ij. x_i = sum_j c_ij a_j.
+class ContributionMatrix : public Architecture {
+public:
+  ContributionMatrix(arma::uword traits, arma::uword genes) : p_(traits), k_(genes) {}
+  arma::vec genotypic_value(const arma::mat& alleles) const override;
+  arma::mat local_effects(const arma::mat& alleles) const override;
+private:
+  arma::uword p_, k_;
+  void unpack(const arma::mat& alleles, arma::vec& a, arma::mat& C) const;
+};
+
 // ---- Mutation -------------------------------------------------------------
 
 class Mutation {
@@ -121,6 +135,24 @@ public:
 private:
   double rate_y_, sd_y_, rate_b_;
   bool random_state_;
+};
+
+// Mutation for contribution matrix genomes: alleles of the first
+// `weight_loci` loci mutate with probability rate_weight, the others with
+// rate_contribution; a mutation adds Normal(0, sd) to the allele's value.
+class ContributionMutation : public Mutation {
+public:
+  ContributionMutation(double rate_weight, double rate_contribution, double sd,
+                       arma::uword weight_loci)
+    : rate_w_(rate_weight), rate_c_(rate_contribution), sd_(sd), weight_loci_(weight_loci) {}
+  void mutate(arma::mat& alleles) const override;
+  void mutate_one(arma::mat& alleles) const override;
+  double expected_mutations(const arma::mat& alleles) const override {
+    return rate_w_ * 2 * weight_loci_ + rate_c_ * (alleles.n_cols - 2 * weight_loci_);
+  }
+private:
+  double rate_w_, rate_c_, sd_;
+  arma::uword weight_loci_;
 };
 
 // ---- Fitness --------------------------------------------------------------

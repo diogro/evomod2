@@ -4,6 +4,10 @@
 #'   allele mutates with probability `rate` per generation; a mutation adds a
 #'   draw from a multivariate normal with mean zero and covariance `cov` to the
 #'   allele's effect vector.
+#' * `contribution_mutation()`: for [contribution_matrix()]. Each allele of
+#'   a weight gene mutates with probability `rate_weight`, each allele of a
+#'   contribution gene with `rate_contribution`; a mutation adds
+#'   `Normal(0, sd)` to the allele's value.
 #' * `binary_b_mutation()`: for [binary_b()]. Each allele's effect `y`
 #'   mutates with probability `rate`, adding `Normal(0, sd)`; each entry of `B`
 #'   mutates with probability `rate_b`. With `b_mutation = "flip"` (the
@@ -27,6 +31,21 @@ mutation <- function(rate, cov) {
   if (!is.numeric(rate) || length(rate) != 1 || rate < 0 || rate > 1)
     stop("`rate` must be a probability", call. = FALSE)
   structure(list(type = "gaussian", rate = rate, cov = cov), class = "evomod_mutation")
+}
+
+#' @rdname mutation
+#' @param rate_weight,rate_contribution mutation probability per allele per
+#'   generation of weight genes and of contribution genes.
+#' @export
+contribution_mutation <- function(rate_weight, rate_contribution, sd) {
+  for (r in list(rate_weight, rate_contribution))
+    if (!is.numeric(r) || length(r) != 1 || r < 0 || r > 1)
+      stop("mutation rates must be probabilities", call. = FALSE)
+  if (!is.numeric(sd) || length(sd) != 1 || sd < 0)
+    stop("`sd` must be a non-negative number", call. = FALSE)
+  structure(list(type = "contribution", rate_weight = rate_weight,
+                 rate_contribution = rate_contribution, sd = sd),
+            class = "evomod_mutation")
 }
 
 #' @rdname mutation
@@ -70,8 +89,10 @@ evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0,
   p <- architecture$traits
   if (mutation$type != architecture$mutation_type)
     stop("the ", architecture$type, " architecture needs ",
-         if (architecture$mutation_type == "binary_b") "binary_b_mutation()" else "mutation()",
+         switch(architecture$mutation_type, binary_b = "binary_b_mutation()",
+                contribution = "contribution_mutation()", "mutation()"),
          call. = FALSE)
+  if (mutation$type == "contribution") mutation$weight_loci <- architecture$genes
   if (mutation$type == "gaussian") {
     cov <- mutation$cov
     if (length(cov) == 1 && !is.matrix(cov)) cov <- diag(cov^2, p)

@@ -2,10 +2,13 @@
 % Please edit documentation in R/model.R
 \name{mutation}
 \alias{mutation}
+\alias{contribution_mutation}
 \alias{binary_b_mutation}
 \title{Mutation models}
 \usage{
 mutation(rate, cov)
+
+contribution_mutation(rate_weight, rate_contribution, sd)
 
 binary_b_mutation(rate, sd, rate_b, b_mutation = c("flip", "random"))
 }
@@ -14,6 +17,9 @@ binary_b_mutation(rate, sd, rate_b, b_mutation = c("flip", "random"))
 
 \item{cov}{mutational covariance matrix (traits x traits), or a single
 number \code{s}, meaning \code{s^2} times the identity.}
+
+\item{rate_weight, rate_contribution}{mutation probability per allele per
+generation of weight genes and of contribution genes.}
 
 \item{sd}{standard deviation of mutations in \code{y}.}
 
@@ -30,6 +36,10 @@ An \code{evomod_mutation} object.
 allele mutates with probability \code{rate} per generation; a mutation adds a
 draw from a multivariate normal with mean zero and covariance \code{cov} to the
 allele's effect vector.
+\item \code{contribution_mutation()}: for \code{\link[=contribution_matrix]{contribution_matrix()}}. Each allele of
+a weight gene mutates with probability \code{rate_weight}, each allele of a
+contribution gene with \code{rate_contribution}; a mutation adds
+\code{Normal(0, sd)} to the allele's value.
 \item \code{binary_b_mutation()}: for \code{\link[=binary_b]{binary_b()}}. Each allele's effect \code{y}
 mutates with probability \code{rate}, adding \code{Normal(0, sd)}; each entry of \code{B}
 mutates with probability \code{rate_b}. With \code{b_mutation = "flip"} (the
