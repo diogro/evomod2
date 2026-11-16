@@ -5,6 +5,7 @@
 //   Architecture  genotype -> genotypic value map
 //   Mutation      changes allelic effects
 //   Fitness       phenotype -> fitness (log scale)
+//   Recombination parents -> offspring genome (meiosis)
 //
 // To add a component, derive from the interface, implement its virtual
 // functions, and add a case to the matching make_*() factory (components.cpp)
@@ -35,6 +36,9 @@ public:
   // (traits x loci): change in genotypic value when the locus is set to the
   // reference genotype (all effects zero)
   virtual arma::mat local_effects(const arma::mat& alleles) const = 0;
+  // effect vector of each allele (traits x alleles) when the genotypic value
+  // is their sum; an empty matrix for architectures where it is not
+  virtual arma::mat allele_effects(const arma::mat& alleles) const { return arma::mat(); }
 };
 
 // Locus effects: sum of the two allele vectors of each locus (traits x loci).
@@ -45,6 +49,7 @@ class Additive : public Architecture {
 public:
   arma::vec genotypic_value(const arma::mat& alleles) const override;
   arma::mat local_effects(const arma::mat& alleles) const override;
+  arma::mat allele_effects(const arma::mat& alleles) const override { return alleles; }
 };
 
 // Pairwise multilinear epistasis (Hansen & Wagner 2001):
@@ -67,6 +72,7 @@ class BinaryB : public Architecture {
 public:
   arma::vec genotypic_value(const arma::mat& alleles) const override;
   arma::mat local_effects(const arma::mat& alleles) const override;
+  arma::mat allele_effects(const arma::mat& alleles) const override;
 };
 
 // ---- Mutation -------------------------------------------------------------
@@ -123,10 +129,39 @@ private:
   arma::mat omega_inv_;
 };
 
+// ---- Recombination --------------------------------------------------------
+
+// Builds an offspring genome from two parents: column 2l of the offspring gets
+// one of the sire's two alleles at locus l, column 2l + 1 one of the dam's.
+class Recombination {
+public:
+  virtual ~Recombination() {}
+  virtual void offspring(const arma::mat& sire, const arma::mat& dame, arma::mat& kid) const = 0;
+};
+
+// Every locus independent (each allele drawn with probability 1/2).
+class FreeRecombination : public Recombination {
+public:
+  void offspring(const arma::mat& sire, const arma::mat& dame, arma::mat& kid) const override;
+};
+
+// Loci in a line: rates[l] is the probability of a crossover between locus l
+// and l + 1 (0.5 between chromosomes). A gamete starts on a random haplotype
+// and switches haplotype at each crossover.
+class LinkageMap : public Recombination {
+public:
+  explicit LinkageMap(const arma::vec& rates) : rates_(rates) {}
+  void offspring(const arma::mat& sire, const arma::mat& dame, arma::mat& kid) const override;
+private:
+  arma::vec rates_;
+  void gamete(const arma::mat& parent, arma::mat& kid, arma::uword slot) const;
+};
+
 // ---- Factories: R lists -> components -------------------------------------
 
 std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec);
 std::unique_ptr<Mutation> make_mutation(const Rcpp::List& spec);
+std::unique_ptr<Recombination> make_recombination(const Rcpp::List& spec);
 
 // ---- Random numbers (R's generator, so set.seed() applies) ----------------
 

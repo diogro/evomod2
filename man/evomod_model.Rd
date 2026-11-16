@@ -4,7 +4,13 @@
 \alias{evomod_model}
 \title{Simulation model}
 \usage{
-evomod_model(architecture, mutation, env_sd = 0, init_sd = 0)
+evomod_model(
+  architecture,
+  mutation,
+  env_sd = 0,
+  init_sd = 0,
+  recombination = free_recombination()
+)
 }
 \arguments{
 \item{architecture}{an architecture, see \link{architectures}.}
@@ -16,12 +22,16 @@ evomod_model(architecture, mutation, env_sd = 0, init_sd = 0)
 \item{init_sd}{standard deviation of allelic effects in a new population
 (\code{y} for \code{\link[=binary_b]{binary_b()}}); 0 (the default) starts every individual at the
 reference genotype.}
+
+\item{recombination}{how loci are inherited, see \link{recombination}; free
+recombination by default.}
 }
 \value{
 An \code{evomod_model} object.
 }
 \description{
-Combines a genetic architecture, a mutation model and environmental noise.
+Combines a genetic architecture, a mutation model, recombination and
+environmental noise.
 }
 \examples{
 model <- evomod_model(additive(loci = 50, traits = 2),

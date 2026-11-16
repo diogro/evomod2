@@ -8,7 +8,7 @@
 \usage{
 evolve(x, regimes, ...)
 
-\method{evolve}{evomod_model}(x, regimes, n, record_every = 1, seed = NULL, ...)
+\method{evolve}{evomod_model}(x, regimes, n, record_every = 1, seed = NULL, initial = NULL, ...)
 
 \method{evolve}{evomod_population}(x, regimes, record_every = x$record_every, seed = NULL, ...)
 }
@@ -26,6 +26,10 @@ evolve(x, regimes, ...)
 generations (and at the start).}
 
 \item{seed}{optional seed passed to \code{set.seed()} before the run.}
+
+\item{initial}{optional starting genomes, an array
+\verb{rows x alleles x n} (see \code{\link[=genomes]{genomes()}}); by default they are drawn as
+described in \code{\link[=evomod_model]{evomod_model()}}.}
 }
 \value{
 An \code{evomod_population}; see \code{\link[=trait_means]{trait_means()}}, \code{\link[=g_matrices]{g_matrices()}} and

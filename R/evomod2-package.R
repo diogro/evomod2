@@ -4,7 +4,8 @@
 #' [binary_b()]) and a mutation model ([mutation()], [binary_b_mutation()]) with [evomod_model()], then run it through
 #' selection regimes ([drift()], [stabilizing()], [directional()]) with
 #' [evolve()]. Recorded statistics: [trait_means()], [variances()],
-#' [g_matrices()].
+#' [g_matrices()], [g_decomposition()]. Loci are unlinked unless a
+#' [genetic_map()] is given to [evomod_model()].
 #'
 #' New components (architectures, mutation models, fitness functions) are
 #' C++ classes in `src/evomod.h`; see the "Extending evomod2" section of the

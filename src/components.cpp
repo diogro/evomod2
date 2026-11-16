@@ -63,6 +63,13 @@ arma::vec BinaryB::genotypic_value(const arma::mat& alleles) const {
   return alleles.rows(1, p) * alleles.row(0).t();
 }
 
+arma::mat BinaryB::allele_effects(const arma::mat& alleles) const {
+  arma::uword p = alleles.n_rows - 1;
+  arma::mat E = alleles.rows(1, p);
+  E.each_row() %= alleles.row(0);
+  return E;
+}
+
 arma::mat BinaryB::local_effects(const arma::mat& alleles) const {
   arma::uword p = alleles.n_rows - 1, loci = alleles.n_cols / 2;
   arma::mat L(p, loci);
@@ -118,6 +125,31 @@ arma::vec GaussianFitness::log_fitness(const arma::mat& z) const {
   return -0.5 * arma::sum(d % (omega_inv_ * d), 0).t();
 }
 
+// ---- Recombination ------------------------------------------------------------
+
+void FreeRecombination::offspring(const arma::mat& sire, const arma::mat& dame,
+                                  arma::mat& kid) const {
+  arma::uword loci = kid.n_cols / 2;
+  for (arma::uword l = 0; l < loci; ++l) {
+    kid.col(2 * l)     = sire.col(2 * l + (R::unif_rand() < 0.5 ? 0 : 1));
+    kid.col(2 * l + 1) = dame.col(2 * l + (R::unif_rand() < 0.5 ? 0 : 1));
+  }
+}
+
+void LinkageMap::gamete(const arma::mat& parent, arma::mat& kid, arma::uword slot) const {
+  arma::uword loci = kid.n_cols / 2;
+  arma::uword h = R::unif_rand() < 0.5 ? 0 : 1;
+  for (arma::uword l = 0; l < loci; ++l) {
+    if (l > 0 && R::unif_rand() < rates_[l - 1]) h = 1 - h;
+    kid.col(2 * l + slot) = parent.col(2 * l + h);
+  }
+}
+
+void LinkageMap::offspring(const arma::mat& sire, const arma::mat& dame, arma::mat& kid) const {
+  gamete(sire, kid, 0);
+  gamete(dame, kid, 1);
+}
+
 // ---- Factories ----------------------------------------------------------------
 
 std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec) {
@@ -141,6 +173,14 @@ std::unique_ptr<Mutation> make_mutation(const Rcpp::List& spec) {
       Rcpp::as<double>(spec["rate"]), Rcpp::as<double>(spec["sd"]),
       Rcpp::as<double>(spec["rate_b"]), Rcpp::as<bool>(spec["random_state"])));
   Rcpp::stop("unknown mutation type: " + type);
+}
+
+std::unique_ptr<Recombination> make_recombination(const Rcpp::List& spec) {
+  std::string type = Rcpp::as<std::string>(spec["type"]);
+  if (type == "free") return std::unique_ptr<Recombination>(new FreeRecombination());
+  if (type == "map")
+    return std::unique_ptr<Recombination>(new LinkageMap(Rcpp::as<arma::vec>(spec["rates"])));
+  Rcpp::stop("unknown recombination type: " + type);
 }
 
 }  // namespace evomod

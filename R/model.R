@@ -45,10 +45,13 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
 
 #' Simulation model
 #'
-#' Combines a genetic architecture, a mutation model and environmental noise.
+#' Combines a genetic architecture, a mutation model, recombination and
+#' environmental noise.
 #'
 #' @param architecture an architecture, see [architectures].
 #' @param mutation a mutation model matching the architecture, see [mutation()].
+#' @param recombination how loci are inherited, see [recombination]; free
+#'   recombination by default.
 #' @param env_sd standard deviation of environmental effects (`z = x + e`).
 #' @param init_sd standard deviation of allelic effects in a new population
 #'   (`y` for [binary_b()]); 0 (the default) starts every individual at the
@@ -58,7 +61,8 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
 #' model <- evomod_model(additive(loci = 50, traits = 2),
 #'                       mutation(rate = 0.005, cov = 0.05), env_sd = 1)
 #' @export
-evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0) {
+evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0,
+                         recombination = free_recombination()) {
   if (!inherits(architecture, "evomod_architecture"))
     stop("`architecture` must be created with additive(), multilinear(), ...", call. = FALSE)
   if (!inherits(mutation, "evomod_mutation"))
@@ -70,7 +74,7 @@ evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0) {
          call. = FALSE)
   if (mutation$type == "gaussian") {
     cov <- mutation$cov
-    if (length(cov) == 1) cov <- diag(cov^2, p)
+    if (length(cov) == 1 && !is.matrix(cov)) cov <- diag(cov^2, p)
     cov <- as.matrix(cov)
     if (!identical(dim(cov), c(p, p)) || !isSymmetric(unname(cov)))
       stop("mutational `cov` must be a symmetric ", p, " x ", p, " matrix", call. = FALSE)
@@ -78,7 +82,9 @@ evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0) {
       stop("mutational `cov` must be positive definite", call. = FALSE)
     mutation$cov <- cov
   }
+  recombination <- resolve_recombination(recombination, architecture$loci)
   structure(list(architecture = architecture, mutation = mutation,
+                 recombination = recombination,
                  env_sd = env_sd, init_sd = init_sd, traits = p,
                  loci = architecture$loci),
             class = "evomod_model")
@@ -89,6 +95,10 @@ print.evomod_model <- function(x, ...) {
   cat("<evomod model>\n")
   cat("  architecture:", x$architecture$type, "-", x$loci, "loci,", x$traits, "traits\n")
   cat("  mutation:     rate", x$mutation$rate, "per allele\n")
+  r <- x$recombination
+  cat("  recombination:", if (r$type == "free") "free" else
+      if (r$map_type == "genetic_map") paste(r$chromosomes, "chromosome(s) of", r$length, "Morgans")
+      else "linkage map", "\n")
   cat("  env_sd:      ", x$env_sd, "  init_sd:", x$init_sd, "\n")
   invisible(x)
 }

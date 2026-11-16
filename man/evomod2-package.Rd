@@ -10,7 +10,8 @@ Build a model from an architecture (\code{\link[=additive]{additive()}}, \code{\
 \code{\link[=binary_b]{binary_b()}}) and a mutation model (\code{\link[=mutation]{mutation()}}, \code{\link[=binary_b_mutation]{binary_b_mutation()}}) with \code{\link[=evomod_model]{evomod_model()}}, then run it through
 selection regimes (\code{\link[=drift]{drift()}}, \code{\link[=stabilizing]{stabilizing()}}, \code{\link[=directional]{directional()}}) with
 \code{\link[=evolve]{evolve()}}. Recorded statistics: \code{\link[=trait_means]{trait_means()}}, \code{\link[=variances]{variances()}},
-\code{\link[=g_matrices]{g_matrices()}}.
+\code{\link[=g_matrices]{g_matrices()}}, \code{\link[=g_decomposition]{g_decomposition()}}. Loci are unlinked unless a
+\code{\link[=genetic_map]{genetic_map()}} is given to \code{\link[=evomod_model]{evomod_model()}}.
 }
 \details{
 New components (architectures, mutation models, fitness functions) are

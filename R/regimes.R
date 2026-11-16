@@ -60,7 +60,7 @@ resolve_regimes <- function(regimes, p, theta) {
          call. = FALSE)
   lapply(regimes, function(r) {
     omega <- if (is.null(r$omega)) diag(p) else r$omega
-    if (length(omega) == 1) omega <- diag(omega, p)
+    if (length(omega) == 1 && !is.matrix(omega)) omega <- diag(omega, p)
     omega <- as.matrix(omega)
     if (!identical(dim(omega), c(p, p)) || !isSymmetric(unname(omega)))
       stop("`omega` must be a symmetric ", p, " x ", p, " matrix", call. = FALSE)

@@ -7,9 +7,16 @@
 #' * `variances()`: additive genetic (`G`) and phenotypic (`P`) variances
 #'   and heritability (`h2`) of each trait, in long format.
 #' * `g_matrices()`, `p_matrices()`: lists of covariance matrices of genotypic
-#'   values (G) and phenotypes (P), named by generation.
+#'   values (G) and phenotypes (P), named by generation. For architectures
+#'   where genotypic values are sums of allele effects ([additive()],
+#'   [binary_b()]) G can be split into its genic part, the G expected
+#'   without linkage disequilibrium (twice the sum over loci of the covariance
+#'   of allele effects), and the rest, due to linkage disequilibrium between
+#'   loci and departures from Hardy-Weinberg (`component = "ld"`); see also
+#'   [g_decomposition()].
 #'
 #' @param pop an `evomod_population`.
+#' @param component `"total"` (G), `"genic"` or `"ld"`.
 #' @return A data frame or a named list of matrices.
 #' @name statistics
 NULL
@@ -40,7 +47,7 @@ variances <- function(pop) {
 }
 
 matrices <- function(pop, which) {
-  a <- pop$records[[which]]
+  a <- if (which == "G_ld") pop$records$G - pop$records$G_genic else pop$records[[which]]
   out <- lapply(seq_len(dim(a)[3]), function(i) {
     m <- a[, , i, drop = TRUE]
     m <- matrix(m, pop$model$traits, pop$model$traits)
@@ -53,7 +60,13 @@ matrices <- function(pop, which) {
 
 #' @rdname statistics
 #' @export
-g_matrices <- function(pop) matrices(pop, "G")
+g_matrices <- function(pop, component = c("total", "genic", "ld")) {
+  component <- match.arg(component)
+  if (component != "total" && is.null(pop$records$G_genic))
+    stop("the genic part of G is only defined for architectures where genotypic values ",
+         "are sums of allele effects (additive, binary_b)", call. = FALSE)
+  matrices(pop, c(total = "G", genic = "G_genic", ld = "G_ld")[[component]])
+}
 
 #' @rdname statistics
 #' @export
@@ -113,6 +126,37 @@ check_genome_rows <- function(alleles, arch) {
   if (dim(alleles)[1] != arch$state_rows || dim(alleles)[2] != 2 * arch$loci)
     stop("genomes of this architecture are ", arch$state_rows, " x ", 2 * arch$loci,
          " (rows x alleles)", call. = FALSE)
+}
+
+#' Genic and linkage disequilibrium parts of G
+#'
+#' Splits the G matrix of the current population into its genic part, the G
+#' expected without linkage disequilibrium or departures from Hardy-Weinberg
+#' (twice the sum over loci of the covariance of allele effects, pooling both
+#' alleles of every individual), and the remainder (`ld`), due to linkage
+#' disequilibrium between loci and departures from Hardy-Weinberg. Defined for
+#' architectures where genotypic values are sums of allele effects
+#' ([additive()], [binary_b()]). All matrices use the `n - 1` denominator of
+#' [stats::cov()], so `G = genic + ld`.
+#'
+#' @param pop an `evomod_population`.
+#' @return A list with matrices `G`, `genic` and `ld`.
+#' @examples
+#' model <- evomod_model(additive(loci = 20, traits = 2),
+#'                       mutation(rate = 0.01, cov = 0.1), init_sd = 0.1)
+#' pop <- evolve(model, stabilizing(20, omega = 10), n = 100, seed = 1)
+#' g_decomposition(pop)
+#' @export
+g_decomposition <- function(pop) {
+  arch <- pop$model$architecture
+  genic <- genic_covariance_cpp(genomes(pop), arch)
+  if (!length(genic))
+    stop("the genic part of G is only defined for architectures where genotypic values ",
+         "are sums of allele effects (additive, binary_b)", call. = FALSE)
+  G <- stats::cov(t(pop$x))
+  nm <- trait_names(pop)
+  dimnames(genic) <- dimnames(G) <- list(nm, nm)
+  list(G = G, genic = genic, ld = G - genic)
 }
 
 #' Average correlations within and between modules

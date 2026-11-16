@@ -94,3 +94,11 @@ test_that("input errors", {
   expect_error(evolve(m, directional(5, delta_theta = 1, omega = 5), n = 10), "length 2")
   expect_error(evolve(m, stabilizing(5, omega = diag(3)), n = 10), "2 x 2")
 })
+
+test_that("single-trait models run with scalar or 1 x 1 omega and cov", {
+  m <- evomod_model(additive(5, 1), mutation(0.01, matrix(0.1)), init_sd = 0.1)
+  expect_equal(m$mutation$cov, matrix(0.1))
+  pop <- evolve(m, list(drift(3), stabilizing(3, omega = 5), stabilizing(3, omega = matrix(5)),
+                        directional(3, delta_theta = 0.1, omega = 5)), n = 20, seed = 1)
+  expect_equal(pop$generation, 12L)
+})

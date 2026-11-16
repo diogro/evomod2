@@ -12,12 +12,14 @@ trait_means(pop)
 
 variances(pop)
 
-g_matrices(pop)
+g_matrices(pop, component = c("total", "genic", "ld"))
 
 p_matrices(pop)
 }
 \arguments{
 \item{pop}{an \code{evomod_population}.}
+
+\item{component}{\code{"total"} (G), \code{"genic"} or \code{"ld"}.}
 }
 \value{
 A data frame or a named list of matrices.
@@ -32,6 +34,12 @@ Statistics recorded during \code{\link[=evolve]{evolve()}}, every \code{record_e
 \item \code{variances()}: additive genetic (\code{G}) and phenotypic (\code{P}) variances
 and heritability (\code{h2}) of each trait, in long format.
 \item \code{g_matrices()}, \code{p_matrices()}: lists of covariance matrices of genotypic
-values (G) and phenotypes (P), named by generation.
+values (G) and phenotypes (P), named by generation. For architectures
+where genotypic values are sums of allele effects (\code{\link[=additive]{additive()}},
+\code{\link[=binary_b]{binary_b()}}) G can be split into its genic part, the G expected
+without linkage disequilibrium (twice the sum over loci of the covariance
+of allele effects), and the rest, due to linkage disequilibrium between
+loci and departures from Hardy-Weinberg (\code{component = "ld"}); see also
+\code{\link[=g_decomposition]{g_decomposition()}}.
 }
 }

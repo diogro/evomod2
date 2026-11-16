@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // evolve_cpp
-Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, double env_sd, Rcpp::List regimes, int generation, int record_every, bool record_start);
-RcppExport SEXP _evomod2_evolve_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP zSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP env_sdSEXP, SEXP regimesSEXP, SEXP generationSEXP, SEXP record_everySEXP, SEXP record_startSEXP) {
+Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, Rcpp::List recombination, double env_sd, Rcpp::List regimes, int generation, int record_every, bool record_start);
+RcppExport SEXP _evomod2_evolve_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP zSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP recombinationSEXP, SEXP env_sdSEXP, SEXP regimesSEXP, SEXP generationSEXP, SEXP record_everySEXP, SEXP record_startSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,12 +22,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type architecture(architectureSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type mutation(mutationSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type recombination(recombinationSEXP);
     Rcpp::traits::input_parameter< double >::type env_sd(env_sdSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type regimes(regimesSEXP);
     Rcpp::traits::input_parameter< int >::type generation(generationSEXP);
     Rcpp::traits::input_parameter< int >::type record_every(record_everySEXP);
     Rcpp::traits::input_parameter< bool >::type record_start(record_startSEXP);
-    rcpp_result_gen = Rcpp::wrap(evolve_cpp(alleles, traits, z, architecture, mutation, env_sd, regimes, generation, record_every, record_start));
+    rcpp_result_gen = Rcpp::wrap(evolve_cpp(alleles, traits, z, architecture, mutation, recombination, env_sd, regimes, generation, record_every, record_start));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -41,6 +42,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type traits(traitsSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type architecture(architectureSEXP);
     rcpp_result_gen = Rcpp::wrap(genotypic_values_cpp(alleles, traits, architecture));
+    return rcpp_result_gen;
+END_RCPP
+}
+// genic_covariance_cpp
+arma::mat genic_covariance_cpp(arma::cube alleles, Rcpp::List architecture);
+RcppExport SEXP _evomod2_genic_covariance_cpp(SEXP allelesSEXP, SEXP architectureSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cube >::type alleles(allelesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type architecture(architectureSEXP);
+    rcpp_result_gen = Rcpp::wrap(genic_covariance_cpp(alleles, architecture));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -83,8 +96,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_evomod2_evolve_cpp", (DL_FUNC) &_evomod2_evolve_cpp, 10},
+    {"_evomod2_evolve_cpp", (DL_FUNC) &_evomod2_evolve_cpp, 11},
     {"_evomod2_genotypic_values_cpp", (DL_FUNC) &_evomod2_genotypic_values_cpp, 3},
+    {"_evomod2_genic_covariance_cpp", (DL_FUNC) &_evomod2_genic_covariance_cpp, 2},
     {"_evomod2_local_effects_cpp", (DL_FUNC) &_evomod2_local_effects_cpp, 2},
     {"_evomod2_mutate_cpp", (DL_FUNC) &_evomod2_mutate_cpp, 2},
     {"_evomod2_log_fitness_cpp", (DL_FUNC) &_evomod2_log_fitness_cpp, 3},

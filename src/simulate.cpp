@@ -19,32 +19,68 @@ arma::uvec sample_weighted(const arma::vec& w, arma::uword n) {
   return out;
 }
 
+// Genic part of G: 2 x the sum over loci of the covariance of allele effects
+// (pooling both alleles of every individual), the G matrix expected without
+// linkage disequilibrium or departures from Hardy-Weinberg. Population moments,
+// scaled by n / (n - 1) like arma::cov. Empty if the architecture is not a
+// sum of allele effects.
+arma::mat genic_covariance(const Architecture& arch, const arma::cube& alleles) {
+  arma::uword n = alleles.n_slices, loci = alleles.n_cols / 2;
+  arma::mat E0 = arch.allele_effects(alleles.slice(0));
+  if (E0.n_elem == 0) return arma::mat();
+  arma::uword p = E0.n_rows;
+  arma::mat sums(p, loci, arma::fill::zeros);
+  arma::cube cross(p, p, loci, arma::fill::zeros);
+  for (arma::uword i = 0; i < n; ++i) {
+    arma::mat E = i == 0 ? E0 : arch.allele_effects(alleles.slice(i));
+    for (arma::uword l = 0; l < loci; ++l) {
+      arma::mat a = E.cols(2 * l, 2 * l + 1);
+      sums.col(l) += arma::sum(a, 1);
+      cross.slice(l) += a * a.t();
+    }
+  }
+  arma::mat genic(p, p, arma::fill::zeros);
+  double m = 2.0 * n;
+  for (arma::uword l = 0; l < loci; ++l) {
+    arma::vec mu = sums.col(l) / m;
+    genic += 2.0 * (cross.slice(l) / m - mu * mu.t());
+  }
+  return genic * (static_cast<double>(n) / (n - 1));
+}
+
 struct Records {
   std::vector<int> generation;
   std::vector<arma::vec> theta, mean_x, mean_z;
-  std::vector<arma::mat> G, P;
+  std::vector<arma::mat> G, P, G_genic;
 
-  void add(int gen, const arma::vec& th, const arma::mat& X, const arma::mat& Z) {
+  void add(int gen, const arma::vec& th, const arma::mat& X, const arma::mat& Z,
+           const Architecture& arch, const arma::cube& alleles) {
     generation.push_back(gen);
     theta.push_back(th);
     mean_x.push_back(arma::mean(X, 1));
     mean_z.push_back(arma::mean(Z, 1));
     G.push_back(arma::cov(X.t()));
     P.push_back(arma::cov(Z.t()));
+    G_genic.push_back(genic_covariance(arch, alleles));
   }
 
   Rcpp::List to_list(arma::uword p) const {
     arma::uword r = generation.size();
     arma::mat th(p, r), mx(p, r), mz(p, r);
     arma::cube g(p, p, r), pp(p, p, r);
+    bool has_genic = r > 0 && G_genic[0].n_elem > 0;
+    arma::cube gg(has_genic ? p : 0, has_genic ? p : 0, has_genic ? r : 0);
     for (arma::uword i = 0; i < r; ++i) {
       th.col(i) = theta[i]; mx.col(i) = mean_x[i]; mz.col(i) = mean_z[i];
       g.slice(i) = G[i]; pp.slice(i) = P[i];
+      if (has_genic) gg.slice(i) = G_genic[i];
     }
-    return Rcpp::List::create(
+    Rcpp::List out = Rcpp::List::create(
       Rcpp::Named("generation") = generation, Rcpp::Named("theta") = th,
       Rcpp::Named("mean_x") = mx, Rcpp::Named("mean_z") = mz,
       Rcpp::Named("G") = g, Rcpp::Named("P") = pp);
+    if (has_genic) out["G_genic"] = gg;
+    return out;
   }
 };
 
@@ -68,13 +104,14 @@ void phenotypes(const Architecture& arch, double env_sd, const arma::cube& allel
 // record_every, and for the starting state if record_start is true.
 // [[Rcpp::export]]
 Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture,
-                      Rcpp::List mutation, double env_sd, Rcpp::List regimes,
+                      Rcpp::List mutation, Rcpp::List recombination, double env_sd,
+                      Rcpp::List regimes,
                       int generation, int record_every, bool record_start) {
   std::unique_ptr<Architecture> arch = make_architecture(architecture);
   std::unique_ptr<Mutation> mut = make_mutation(mutation);
+  std::unique_ptr<Recombination> recomb = make_recombination(recombination);
 
   arma::uword p = traits, n_alleles = alleles.n_cols, n = alleles.n_slices;
-  arma::uword loci = n_alleles / 2;
   arma::mat X(p, n), Z(p, n);
   for (arma::uword i = 0; i < n; ++i) X.col(i) = arch->genotypic_value(alleles.slice(i));
   if (z.n_elem == 0) {
@@ -86,7 +123,7 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
 
   Records rec;
   arma::vec theta = Rcpp::as<arma::vec>(Rcpp::as<Rcpp::List>(regimes[0])["theta"]);
-  if (record_start) rec.add(generation, theta, X, Z);
+  if (record_start) rec.add(generation, theta, X, Z, *arch, alleles);
 
   arma::cube offspring(alleles.n_rows, n_alleles, n);
   arma::vec w(n);
@@ -110,19 +147,12 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
       }
       for (arma::uword i = 0; i < n; ++i) mut->mutate(alleles.slice(i));
       arma::uvec sires = sample_weighted(w, n), dames = sample_weighted(w, n);
-      for (arma::uword i = 0; i < n; ++i) {
-        const arma::mat& s = alleles.slice(sires[i]);
-        const arma::mat& d = alleles.slice(dames[i]);
-        arma::mat& kid = offspring.slice(i);
-        for (arma::uword l = 0; l < loci; ++l) {
-          kid.col(2 * l)     = s.col(2 * l + (R::unif_rand() < 0.5 ? 0 : 1));
-          kid.col(2 * l + 1) = d.col(2 * l + (R::unif_rand() < 0.5 ? 0 : 1));
-        }
-      }
+      for (arma::uword i = 0; i < n; ++i)
+        recomb->offspring(alleles.slice(sires[i]), alleles.slice(dames[i]), offspring.slice(i));
       alleles.swap(offspring);
       phenotypes(*arch, env_sd, alleles, X, Z);
       ++generation;
-      if (generation % record_every == 0) rec.add(generation, theta, X, Z);
+      if (generation % record_every == 0) rec.add(generation, theta, X, Z, *arch, alleles);
     }
   }
 
@@ -139,6 +169,11 @@ arma::mat genotypic_values_cpp(arma::cube alleles, int traits, Rcpp::List archit
   for (arma::uword i = 0; i < alleles.n_slices; ++i)
     X.col(i) = arch->genotypic_value(alleles.slice(i));
   return X;
+}
+
+// [[Rcpp::export]]
+arma::mat genic_covariance_cpp(arma::cube alleles, Rcpp::List architecture) {
+  return genic_covariance(*make_architecture(architecture), alleles);
 }
 
 // [[Rcpp::export]]

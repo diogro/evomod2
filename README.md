@@ -55,6 +55,24 @@ g_matrices(pop)           # G matrices by generation
 pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same population
 ```
 
+### Genic and linkage disequilibrium parts of G
+
+For architectures where genotypic values are sums of allele effects
+(`additive()`, `binary_b()`), G splits into a genic part, the G expected
+without linkage disequilibrium (twice the sum over loci of the covariance of
+allele effects), and the part due to linkage disequilibrium between loci:
+
+```r
+model <- evomod_model(additive(loci = 50, traits = 4), mutation(0.0005, 0.2), env_sd = 0.8,
+                      recombination = genetic_map(chromosomes = 2, length = 0.5))
+pop <- evolve(model, stabilizing(2000, omega = 10), n = 1000, record_every = 50, seed = 1)
+g_decomposition(pop)           # G, genic and ld for the current population
+g_matrices(pop, "ld")          # the LD part at every recorded generation
+```
+
+Pleiotropy shows up in the genic part (one allele affecting several traits),
+while correlations built by selection between loci show up in the LD part.
+
 ### The model
 
 * **Genomes**: each allele carries an effect vector in trait space; the effect
@@ -76,6 +94,10 @@ pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same populatio
   `local_effects()` gives each locus's effect in the background of the rest
   of the genome.
 * **Phenotypes**: `z = x + e`, `e ~ N(0, env_sd²)`.
+* **Recombination**: loci are unlinked by default. `genetic_map(chromosomes,
+  length)` places loci evenly along chromosomes (Haldane map function), and
+  `linkage(rates)` sets the recombination fraction between each pair of
+  neighbouring loci; pass either as `evomod_model(..., recombination = )`.
 * **Each generation**: the optimum moves (directional regimes), fitness
   `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed, every individual mutates
   (each allele with probability `rate`, adding a `N(0, cov)` vector), and `n`
@@ -94,6 +116,7 @@ The engine is a set of C++ components declared in `src/evomod.h`:
 | `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `BinaryB` |
 | `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation` |
 | `Fitness` | phenotypes → log fitness | `GaussianFitness` |
+| `Recombination` | parents → offspring genome | `FreeRecombination`, `LinkageMap` |
 
 To add, for example, a new architecture:
 
