@@ -1,0 +1,153 @@
+---
+title: "Getting started with evomod2"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with evomod2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.5)
+```
+
+evomod2 simulates populations of diploid individuals whose multivariate
+phenotypes evolve under drift and Gaussian selection. Every simulation has
+the same three ingredients:
+
+1. a **model**: genetic architecture, mutation, recombination and
+   environmental noise;
+2. a list of **selection regimes**;
+3. a call to **`evolve()`**, which returns a population with statistics
+   recorded along the way.
+
+This vignette walks through each one with small, fast simulations. The
+other vignettes compare genetic architectures (`vignette("architectures")`)
+and reproduce the simulations of Melo & Marroig (2015)
+(`vignette("melo-marroig-2015")`).
+
+```{r}
+library(evomod2)
+```
+
+## Models
+
+A genetic architecture says how genomes map to genotypic values `x`. In the
+**additive** architecture, each allele carries an effect vector with one value
+per trait, and `x` is the sum of the effect vectors of all alleles. Mutation
+adds a multivariate normal vector to an allele's effects.
+
+```{r}
+model <- evomod_model(
+  architecture = additive(loci = 20, traits = 4),
+  mutation = mutation(rate = 0.005, cov = 0.1),  # cov: sd 0.1 per trait, uncorrelated
+  env_sd = 0.8,                                  # phenotype z = x + Normal(0, 0.8^2)
+  init_sd = 0.1                                  # starting allelic effects
+)
+model
+```
+
+Other architectures are `binary_b()`, the binary ontogenetic matrix of the
+original evomod model (with `binary_b_mutation()`), and `multilinear()`,
+pairwise multilinear epistasis (see `?architectures`). Loci recombine freely
+unless the model has a genetic map (`?recombination`).
+
+## Selection regimes
+
+Fitness is Gaussian around an optimum `theta`, with covariance `omega` (larger
+`omega` means weaker selection):
+
+```{r}
+omega <- diag(10, 4)
+regimes <- list(
+  drift(100),                                                  # no selection
+  stabilizing(300, omega = omega),                             # fixed optimum
+  directional(300, delta_theta = c(0.02, 0.02, 0, 0), omega = omega)  # moving optimum
+)
+```
+
+`directional()` moves the optimum by `delta_theta` every generation; here
+traits 1 and 2 are pushed up while traits 3 and 4 stay put.
+
+## Running a simulation
+
+```{r}
+pop <- evolve(model, regimes, n = 300, record_every = 10, seed = 1)
+pop
+```
+
+Statistics are recorded every `record_every` generations:
+
+```{r}
+head(trait_means(pop))
+tail(variances(pop))
+g_matrices(pop)[["700"]]
+```
+
+`plot()` shows mean genotypic values against the optimum, additive variances,
+or a genetic correlation (grey lines mark the regime boundaries):
+
+```{r}
+plot(pop)
+```
+
+```{r}
+plot(pop, "variances")
+```
+
+```{r}
+plot(pop, "correlation", traits = c(1, 2))
+```
+
+## Continuing a population
+
+`evolve()` also takes a population and continues it: same individuals,
+generation count, optimum and records.
+
+```{r}
+pop <- evolve(pop, stabilizing(200, omega = omega))
+pop
+```
+
+Runs are reproducible: random numbers come from R's generator, so the same
+`seed` (or `set.seed()`) gives the same result, and continuing a population
+in two steps gives the same result as running it in one.
+
+## Genomes and G matrix statistics
+
+The current genomes are available as an array (rows x alleles x individuals;
+alleles `2l - 1` and `2l` are the two copies of locus `l`):
+
+```{r}
+dim(genomes(pop))
+```
+
+For architectures where genotypic values are sums of allele effects, G splits
+into a genic part (expected without linkage disequilibrium) and a linkage
+disequilibrium part:
+
+```{r}
+dec <- g_decomposition(pop)
+round(dec$genic, 3)
+round(dec$ld, 3)
+```
+
+Matrix statistics for modularity and evolvability:
+
+```{r}
+G <- dec$G
+avg_corr(G, modules = list(1:2, 3:4))   # within- and between-module correlations
+autonomy(G, c(1, 1, 0, 0))               # autonomy in the direction of module 1
+mean_autonomy(G)                         # mean over random directions
+eigen_variance(G)                        # proportion of variance per eigenvector
+```
+
+## Larger simulations
+
+The examples in `system.file("examples", package = "evomod2")` run larger,
+replicated experiments from the command line, one replicate per process, so
+they can run in parallel:
+
+```{r}
+list.files(system.file("examples", package = "evomod2"))
+```

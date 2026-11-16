@@ -95,6 +95,20 @@ itself evolves:
 mutational_covariance(pop, n = 10000)
 ```
 
+### Documentation
+
+* `vignette("evomod2")`: getting started, models, regimes, recorded
+  statistics, G decomposition.
+* `vignette("architectures")`: binary B, additive and multilinear
+  architectures; epistasis; linkage and the genic/LD parts of G.
+* `vignette("melo-marroig-2015")`: reproducing the simulations of Melo &
+  Marroig (2015), with results of a full run.
+* Command-line examples in `system.file("examples", package = "evomod2")`:
+  `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`.
+
+Install with `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)`
+to get the vignettes.
+
 ### The model
 
 * **Genomes**: each allele carries an effect vector in trait space; the effect

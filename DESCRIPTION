@@ -20,9 +20,13 @@ LinkingTo:
     Rcpp,
     RcppArmadillo
 Suggests:
+    evolqg,
     ggplot2,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://github.com/diogro/evomod2
 BugReports: https://github.com/diogro/evomod2/issues
 Config/roxygen2/version: 8.1.1
+VignetteBuilder: knitr
