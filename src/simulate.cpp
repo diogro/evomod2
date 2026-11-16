@@ -176,6 +176,29 @@ arma::mat genic_covariance_cpp(arma::cube alleles, Rcpp::List architecture) {
   return genic_covariance(*make_architecture(architecture), alleles);
 }
 
+// Effects of single mutations: for each of n_samples genomes (indices into
+// alleles, 0-based), apply one mutation event and return the change in
+// genotypic value (traits x n_samples).
+// [[Rcpp::export]]
+arma::mat single_mutation_effects_cpp(arma::cube alleles, int traits, Rcpp::List architecture,
+                                      Rcpp::List mutation, arma::uvec individuals) {
+  std::unique_ptr<Architecture> arch = make_architecture(architecture);
+  std::unique_ptr<Mutation> mut = make_mutation(mutation);
+  arma::mat dx(traits, individuals.n_elem);
+  for (arma::uword s = 0; s < individuals.n_elem; ++s) {
+    arma::mat g = alleles.slice(individuals[s]);
+    arma::vec before = arch->genotypic_value(g);
+    mut->mutate_one(g);
+    dx.col(s) = arch->genotypic_value(g) - before;
+  }
+  return dx;
+}
+
+// [[Rcpp::export]]
+double expected_mutations_cpp(arma::mat alleles, Rcpp::List mutation) {
+  return make_mutation(mutation)->expected_mutations(alleles);
+}
+
 // [[Rcpp::export]]
 arma::mat local_effects_cpp(arma::mat alleles, Rcpp::List architecture) {
   return make_architecture(architecture)->local_effects(alleles);

@@ -73,6 +73,28 @@ g_matrices(pop, "ld")          # the LD part at every recorded generation
 Pleiotropy shows up in the genic part (one allele affecting several traits),
 while correlations built by selection between loci show up in the LD part.
 
+For any architecture, including `multilinear()`, the split can be estimated
+by shuffling alleles among individuals at each locus, which removes
+associations between loci but keeps allele frequencies (as in do O & Whitlock
+2023):
+
+```r
+g_decomposition(pop, method = "shuffle", shuffles = 20)
+```
+
+### Mutational covariance
+
+`mutational_covariance()` applies single mutations to genomes drawn from the
+population and measures their effects on genotypic values. It returns the
+mean effect, the covariance of the effects of one mutation, and the
+mutational (co)variance input per generation, `M`. With epistasis or a
+binary B matrix, mutational effects depend on the genetic background, so `M`
+itself evolves:
+
+```r
+mutational_covariance(pop, n = 10000)
+```
+
 ### The model
 
 * **Genomes**: each allele carries an effect vector in trait space; the effect

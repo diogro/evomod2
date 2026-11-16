@@ -10,7 +10,7 @@ genomes(pop)
 
 genotypic_values(x, alleles = genomes(x))
 
-local_effects(x, alleles = genomes(x)[, , individual], individual = 1)
+local_effects(x, alleles = genome_of(x, individual), individual = 1)
 }
 \arguments{
 \item{pop}{an \code{evomod_population}.}

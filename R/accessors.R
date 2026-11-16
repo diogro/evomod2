@@ -115,11 +115,16 @@ genotypic_values <- function(x, alleles = genomes(x)) {
 
 #' @rdname genomes
 #' @export
-local_effects <- function(x, alleles = genomes(x)[, , individual], individual = 1) {
+local_effects <- function(x, alleles = genome_of(x, individual), individual = 1) {
   arch <- as_architecture(x)
   alleles <- as.matrix(alleles)
   check_genome_rows(alleles, arch)
   local_effects_cpp(alleles, arch)
+}
+
+genome_of <- function(pop, i) {
+  g <- genomes(pop)
+  matrix(g[, , i], nrow = dim(g)[1])
 }
 
 check_genome_rows <- function(alleles, arch) {
@@ -128,35 +133,134 @@ check_genome_rows <- function(alleles, arch) {
          " (rows x alleles)", call. = FALSE)
 }
 
-#' Genic and linkage disequilibrium parts of G
+#' Pleiotropic and linkage disequilibrium parts of G
 #'
-#' Splits the G matrix of the current population into its genic part, the G
-#' expected without linkage disequilibrium or departures from Hardy-Weinberg
-#' (twice the sum over loci of the covariance of allele effects, pooling both
-#' alleles of every individual), and the remainder (`ld`), due to linkage
-#' disequilibrium between loci and departures from Hardy-Weinberg. Defined for
-#' architectures where genotypic values are sums of allele effects
-#' ([additive()], [binary_b()]). All matrices use the `n - 1` denominator of
-#' [stats::cov()], so `G = genic + ld`.
+#' Splits the G matrix of the current population into the G expected without
+#' associations between loci (`genic`) and the remainder (`ld`), due to linkage
+#' disequilibrium between loci and departures from Hardy-Weinberg. All
+#' matrices use the `n - 1` denominator of [stats::cov()], so
+#' `G = genic + ld`.
+#'
+#' * `method = "genic"` (exact; architectures where genotypic values are sums
+#'   of allele effects, [additive()] and [binary_b()]): twice the sum over loci
+#'   of the covariance of allele effects, pooling both alleles of every
+#'   individual.
+#' * `method = "shuffle"` (any architecture, including [multilinear()]): at
+#'   each locus the `2n` allele copies are pooled and randomly reassigned to
+#'   individuals, which removes associations between loci and within loci but
+#'   keeps allele frequencies and every allele's full state (its effect vector,
+#'   or its `y` and column of `B`). `genic` is the mean G of `shuffles` shuffled
+#'   populations (do O & Whitlock 2023 call it the pleiotropic part of G). For
+#'   additive architectures its expectation is the exact genic part.
 #'
 #' @param pop an `evomod_population`.
+#' @param method `"genic"` or `"shuffle"`, see above.
+#' @param shuffles number of shuffled populations averaged (`method = "shuffle"`).
 #' @return A list with matrices `G`, `genic` and `ld`.
+#' @references do O, I., & Whitlock, M. C. (2023). The evolution of genetic
+#'   covariance and modularity as a result of multigenerational environmental
+#'   fluctuation. *Evolution Letters*, 7(6), 457-466.
 #' @examples
 #' model <- evomod_model(additive(loci = 20, traits = 2),
 #'                       mutation(rate = 0.01, cov = 0.1), init_sd = 0.1)
 #' pop <- evolve(model, stabilizing(20, omega = 10), n = 100, seed = 1)
 #' g_decomposition(pop)
+#' g_decomposition(pop, method = "shuffle", shuffles = 20)
 #' @export
-g_decomposition <- function(pop) {
+g_decomposition <- function(pop, method = c("genic", "shuffle"), shuffles = 10) {
+  method <- match.arg(method)
   arch <- pop$model$architecture
-  genic <- genic_covariance_cpp(genomes(pop), arch)
-  if (!length(genic))
-    stop("the genic part of G is only defined for architectures where genotypic values ",
-         "are sums of allele effects (additive, binary_b)", call. = FALSE)
   G <- stats::cov(t(pop$x))
+  if (method == "genic") {
+    genic <- genic_covariance_cpp(genomes(pop), arch)
+    if (!length(genic))
+      stop("the genic part of G is only defined for architectures where genotypic values ",
+           "are sums of allele effects (additive, binary_b); use method = \"shuffle\"",
+           call. = FALSE)
+  } else {
+    check_count(shuffles, "shuffles")
+    genic <- Reduce(`+`, lapply(seq_len(shuffles), function(i)
+      stats::cov(t(genotypic_values(arch, shuffle_genomes(genomes(pop))))))) / shuffles
+  }
+  genic <- as.matrix(genic)
   nm <- trait_names(pop)
   dimnames(genic) <- dimnames(G) <- list(nm, nm)
   list(G = G, genic = genic, ld = G - genic)
+}
+
+#' Shuffle alleles among individuals
+#'
+#' At each locus, pools the `2n` allele copies of the population and assigns
+#' them to individuals at random. Allele frequencies and the state of every
+#' allele are kept; associations between loci (linkage disequilibrium) and
+#' between the two alleles of a locus (departures from Hardy-Weinberg) are
+#' removed.
+#'
+#' @param alleles genomes, an array `rows x alleles x individuals` (see
+#'   [genomes()]).
+#' @return An array of the same shape.
+#' @examples
+#' model <- evomod_model(additive(loci = 5, traits = 2), mutation(0.01, 0.1), init_sd = 0.1)
+#' pop <- evolve(model, drift(5), n = 20, seed = 1)
+#' shuffled <- shuffle_genomes(genomes(pop))
+#' @export
+shuffle_genomes <- function(alleles) {
+  d <- dim(alleles)
+  n <- d[3]
+  out <- alleles
+  for (l in seq_len(d[2] / 2)) {
+    cols <- c(2 * l - 1, 2 * l)
+    # columns: allele 1 of individual 1, allele 2 of individual 1, allele 1 of individual 2, ...
+    pool <- matrix(alleles[, cols, , drop = FALSE], nrow = d[1])
+    out[, cols, ] <- array(pool[, sample.int(2 * n), drop = FALSE], c(d[1], 2, n))
+  }
+  out
+}
+
+#' Mutational covariance
+#'
+#' Effects of new mutations on genotypic values in the current population.
+#' Genomes are drawn at random (with replacement), and each receives exactly
+#' one mutation event of the model's mutation process, at a site chosen in
+#' proportion to the mutation rates; the effect is the change in its genotypic
+#' value. With epistasis ([multilinear()]) or [binary_b()] the effects depend
+#' on the genetic background, so the mutational covariance evolves.
+#'
+#' @param pop an `evomod_population`.
+#' @param n number of mutations sampled.
+#' @param effects if `TRUE`, also return the sampled effects.
+#' @return A list with
+#'   * `mean`: mean effect of a mutation on each trait (non-zero with
+#'     directional epistasis);
+#'   * `per_mutation`: covariance matrix of the effects of one mutation;
+#'   * `expected_mutations`: expected number of mutation events per genome per
+#'     generation;
+#'   * `M`: mutational (co)variance input per generation,
+#'     `expected_mutations * E[dx dx']`;
+#'   * `effects`: the sampled effects (traits x n), if requested.
+#' @examples
+#' model <- evomod_model(additive(loci = 20, traits = 2),
+#'                       mutation(rate = 0.01, cov = 0.1), init_sd = 0.1)
+#' pop <- evolve(model, stabilizing(20, omega = 10), n = 100, seed = 1)
+#' mutational_covariance(pop, n = 5000)
+#' @export
+mutational_covariance <- function(pop, n = 10000, effects = FALSE) {
+  check_count(n, "n")
+  model <- pop$model
+  g <- genomes(pop)
+  individuals <- sample.int(dim(g)[3], n, replace = TRUE) - 1L
+  dx <- single_mutation_effects_cpp(g, model$traits, model$architecture, model$mutation,
+                                    individuals)
+  nm <- trait_names(pop)
+  rownames(dx) <- nm
+  second <- tcrossprod(dx) / n
+  per_mutation <- stats::cov(t(dx))
+  rate <- expected_mutations_cpp(matrix(g[, , 1], nrow = dim(g)[1]), model$mutation)
+  dimnames(per_mutation) <- dimnames(second) <- list(nm, nm)
+  out <- list(mean = rowMeans(dx), per_mutation = per_mutation,
+              expected_mutations = rate, M = rate * second)
+  if (effects) out$effects <- dx
+  out
 }
 
 #' Average correlations within and between modules

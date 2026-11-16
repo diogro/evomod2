@@ -2,29 +2,51 @@
 % Please edit documentation in R/accessors.R
 \name{g_decomposition}
 \alias{g_decomposition}
-\title{Genic and linkage disequilibrium parts of G}
+\title{Pleiotropic and linkage disequilibrium parts of G}
 \usage{
-g_decomposition(pop)
+g_decomposition(pop, method = c("genic", "shuffle"), shuffles = 10)
 }
 \arguments{
 \item{pop}{an \code{evomod_population}.}
+
+\item{method}{\code{"genic"} or \code{"shuffle"}, see above.}
+
+\item{shuffles}{number of shuffled populations averaged (\code{method = "shuffle"}).}
 }
 \value{
 A list with matrices \code{G}, \code{genic} and \code{ld}.
 }
 \description{
-Splits the G matrix of the current population into its genic part, the G
-expected without linkage disequilibrium or departures from Hardy-Weinberg
-(twice the sum over loci of the covariance of allele effects, pooling both
-alleles of every individual), and the remainder (\code{ld}), due to linkage
-disequilibrium between loci and departures from Hardy-Weinberg. Defined for
-architectures where genotypic values are sums of allele effects
-(\code{\link[=additive]{additive()}}, \code{\link[=binary_b]{binary_b()}}). All matrices use the \code{n - 1} denominator of
-\code{\link[stats:cov]{stats::cov()}}, so \code{G = genic + ld}.
+Splits the G matrix of the current population into the G expected without
+associations between loci (\code{genic}) and the remainder (\code{ld}), due to linkage
+disequilibrium between loci and departures from Hardy-Weinberg. All
+matrices use the \code{n - 1} denominator of \code{\link[stats:cov]{stats::cov()}}, so
+\code{G = genic + ld}.
+}
+\details{
+\itemize{
+\item \code{method = "genic"} (exact; architectures where genotypic values are sums
+of allele effects, \code{\link[=additive]{additive()}} and \code{\link[=binary_b]{binary_b()}}): twice the sum over loci
+of the covariance of allele effects, pooling both alleles of every
+individual.
+\item \code{method = "shuffle"} (any architecture, including \code{\link[=multilinear]{multilinear()}}): at
+each locus the \verb{2n} allele copies are pooled and randomly reassigned to
+individuals, which removes associations between loci and within loci but
+keeps allele frequencies and every allele's full state (its effect vector,
+or its \code{y} and column of \code{B}). \code{genic} is the mean G of \code{shuffles} shuffled
+populations (do O & Whitlock 2023 call it the pleiotropic part of G). For
+additive architectures its expectation is the exact genic part.
+}
 }
 \examples{
 model <- evomod_model(additive(loci = 20, traits = 2),
                       mutation(rate = 0.01, cov = 0.1), init_sd = 0.1)
 pop <- evolve(model, stabilizing(20, omega = 10), n = 100, seed = 1)
 g_decomposition(pop)
+g_decomposition(pop, method = "shuffle", shuffles = 20)
+}
+\references{
+do O, I., & Whitlock, M. C. (2023). The evolution of genetic
+covariance and modularity as a result of multigenerational environmental
+fluctuation. \emph{Evolution Letters}, 7(6), 457-466.
 }

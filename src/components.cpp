@@ -96,6 +96,26 @@ void GaussianMutation::mutate(arma::mat& alleles) const {
   }
 }
 
+void GaussianMutation::mutate_one(arma::mat& alleles) const {
+  arma::uword n_alleles = alleles.n_cols;
+  arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
+  alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+}
+
+void BinaryBMutation::mutate_one(arma::mat& alleles) const {
+  arma::uword n_alleles = alleles.n_cols, p = alleles.n_rows - 1;
+  double y_events = rate_y_ * n_alleles, b_events = rate_b_ * n_alleles * p;
+  if (R::unif_rand() * (y_events + b_events) < y_events) {
+    arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
+    alleles(0, a) += sd_y_ * R::norm_rand();
+  } else {
+    arma::uword n_entries = n_alleles * p;
+    arma::uword pos = std::min(static_cast<arma::uword>(R::unif_rand() * n_entries), n_entries - 1);
+    arma::uword a = pos / p, k = 1 + pos % p;
+    if (!random_state_ || R::unif_rand() < 0.5) alleles(k, a) = 1.0 - alleles(k, a);
+  }
+}
+
 void BinaryBMutation::mutate(arma::mat& alleles) const {
   arma::uword n_alleles = alleles.n_cols, p = alleles.n_rows - 1;
   int n_y = static_cast<int>(R::rbinom(static_cast<double>(n_alleles), rate_y_));

@@ -13,6 +13,14 @@ genic_covariance_cpp <- function(alleles, architecture) {
     .Call(`_evomod2_genic_covariance_cpp`, alleles, architecture)
 }
 
+single_mutation_effects_cpp <- function(alleles, traits, architecture, mutation, individuals) {
+    .Call(`_evomod2_single_mutation_effects_cpp`, alleles, traits, architecture, mutation, individuals)
+}
+
+expected_mutations_cpp <- function(alleles, mutation) {
+    .Call(`_evomod2_expected_mutations_cpp`, alleles, mutation)
+}
+
 local_effects_cpp <- function(alleles, architecture) {
     .Call(`_evomod2_local_effects_cpp`, alleles, architecture)
 }

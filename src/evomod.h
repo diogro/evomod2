@@ -80,8 +80,13 @@ public:
 class Mutation {
 public:
   virtual ~Mutation() {}
-  // mutate one genome in place
+  // mutate one genome in place (one generation of mutation)
   virtual void mutate(arma::mat& alleles) const = 0;
+  // apply exactly one mutation event, at a site chosen in proportion to the
+  // mutation rates
+  virtual void mutate_one(arma::mat& alleles) const = 0;
+  // expected number of mutation events per genome per generation
+  virtual double expected_mutations(const arma::mat& alleles) const = 0;
 };
 
 // Each allele mutates with probability `rate`; a mutation adds a draw from
@@ -90,6 +95,10 @@ class GaussianMutation : public Mutation {
 public:
   GaussianMutation(double rate, const arma::mat& cov);
   void mutate(arma::mat& alleles) const override;
+  void mutate_one(arma::mat& alleles) const override;
+  double expected_mutations(const arma::mat& alleles) const override {
+    return rate_ * alleles.n_cols;
+  }
 private:
   double rate_;
   arma::mat chol_lower_;  // cov = L L'
@@ -105,6 +114,10 @@ public:
   BinaryBMutation(double rate_y, double sd_y, double rate_b, bool random_state)
     : rate_y_(rate_y), sd_y_(sd_y), rate_b_(rate_b), random_state_(random_state) {}
   void mutate(arma::mat& alleles) const override;
+  void mutate_one(arma::mat& alleles) const override;
+  double expected_mutations(const arma::mat& alleles) const override {
+    return rate_y_ * alleles.n_cols + rate_b_ * alleles.n_cols * (alleles.n_rows - 1);
+  }
 private:
   double rate_y_, sd_y_, rate_b_;
   bool random_state_;

@@ -57,6 +57,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// single_mutation_effects_cpp
+arma::mat single_mutation_effects_cpp(arma::cube alleles, int traits, Rcpp::List architecture, Rcpp::List mutation, arma::uvec individuals);
+RcppExport SEXP _evomod2_single_mutation_effects_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP individualsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cube >::type alleles(allelesSEXP);
+    Rcpp::traits::input_parameter< int >::type traits(traitsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type architecture(architectureSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type mutation(mutationSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type individuals(individualsSEXP);
+    rcpp_result_gen = Rcpp::wrap(single_mutation_effects_cpp(alleles, traits, architecture, mutation, individuals));
+    return rcpp_result_gen;
+END_RCPP
+}
+// expected_mutations_cpp
+double expected_mutations_cpp(arma::mat alleles, Rcpp::List mutation);
+RcppExport SEXP _evomod2_expected_mutations_cpp(SEXP allelesSEXP, SEXP mutationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type alleles(allelesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type mutation(mutationSEXP);
+    rcpp_result_gen = Rcpp::wrap(expected_mutations_cpp(alleles, mutation));
+    return rcpp_result_gen;
+END_RCPP
+}
 // local_effects_cpp
 arma::mat local_effects_cpp(arma::mat alleles, Rcpp::List architecture);
 RcppExport SEXP _evomod2_local_effects_cpp(SEXP allelesSEXP, SEXP architectureSEXP) {
@@ -99,6 +126,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_evomod2_evolve_cpp", (DL_FUNC) &_evomod2_evolve_cpp, 11},
     {"_evomod2_genotypic_values_cpp", (DL_FUNC) &_evomod2_genotypic_values_cpp, 3},
     {"_evomod2_genic_covariance_cpp", (DL_FUNC) &_evomod2_genic_covariance_cpp, 2},
+    {"_evomod2_single_mutation_effects_cpp", (DL_FUNC) &_evomod2_single_mutation_effects_cpp, 5},
+    {"_evomod2_expected_mutations_cpp", (DL_FUNC) &_evomod2_expected_mutations_cpp, 2},
     {"_evomod2_local_effects_cpp", (DL_FUNC) &_evomod2_local_effects_cpp, 2},
     {"_evomod2_mutate_cpp", (DL_FUNC) &_evomod2_mutate_cpp, 2},
     {"_evomod2_log_fitness_cpp", (DL_FUNC) &_evomod2_log_fitness_cpp, 3},
