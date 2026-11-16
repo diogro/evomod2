@@ -67,7 +67,13 @@ regimes <- list(
 ```
 
 `directional()` moves the optimum by `delta_theta` every generation; here
-traits 1 and 2 are pushed up while traits 3 and 4 stay put.
+traits 1 and 2 are pushed up while traits 3 and 4 stay put. `fluctuating()`
+makes the optimum jump up or down every few generations, for all traits
+together, independently, or in blocks (as in do O & Whitlock 2023):
+
+```{r}
+fluctuating(5000, every = 10, step = 0.2, omega = 1, structure = list(1:2, 3:4))
+```
 
 ## Running a simulation
 

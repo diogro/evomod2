@@ -5,6 +5,7 @@
 \alias{drift}
 \alias{stabilizing}
 \alias{directional}
+\alias{fluctuating}
 \title{Selection regimes}
 \usage{
 drift(generations)
@@ -12,6 +13,16 @@ drift(generations)
 stabilizing(generations, omega, theta = NULL)
 
 directional(generations, delta_theta, omega, theta = NULL)
+
+fluctuating(
+  generations,
+  every,
+  step,
+  omega,
+  structure = "correlated",
+  bounds = c(-1, 1),
+  theta = NULL
+)
 }
 \arguments{
 \item{generations}{number of generations.}
@@ -23,6 +34,14 @@ single number \code{w}, meaning \code{w} times the identity.}
 
 \item{delta_theta}{change in the optimum per generation (vector, one value
 per trait).}
+
+\item{every}{number of generations between jumps of the optimum.}
+
+\item{step}{size of a jump (one value, or one per trait).}
+
+\item{structure}{\code{"correlated"}, \code{"independent"} or a list of trait blocks.}
+
+\item{bounds}{lower and upper bound of the optimum (\code{NULL} for none).}
 }
 \value{
 An \code{evomod_regime} object.
@@ -37,6 +56,15 @@ A simulation runs through a list of regimes:
 covariance \code{omega}, \verb{w(z) = exp(-(z - theta)' omega^-1 (z - theta) / 2)}.
 \item \code{directional()}: as stabilizing, but the optimum moves by \code{delta_theta}
 every generation (before selection).
+\item \code{fluctuating()}: as stabilizing, but after every \code{every} generations the
+optimum jumps by \code{step} up or down (do O & Whitlock 2023). With
+\code{structure = "correlated"} all traits jump in the same direction; with
+\code{"independent"} each trait draws its own direction; a list of trait
+blocks (e.g. \code{list(1:2, 3:4)}) makes traits jump together within blocks
+and independently between them (traits not in any block jump alone).
+A jump that would take a trait of the block outside \code{bounds} is not
+taken, so at a bound the optimum stays or moves inward with probability
+1/2 each; \code{bounds = NULL} leaves the optimum unbounded.
 }
 
 When \code{theta} is \code{NULL} the regime starts from the optimum at the end of the
@@ -45,4 +73,6 @@ previous regime (the origin for the first one).
 \examples{
 regimes <- list(drift(100), stabilizing(1000, omega = 20),
                 directional(1000, delta_theta = c(0.005, 0), omega = 20))
+fluctuating(5000, every = 10, step = 0.2, omega = 1, structure = "correlated")
+fluctuating(5000, every = 10, step = 0.2, omega = 1, structure = list(1:2, 3:4))
 }

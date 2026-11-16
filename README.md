@@ -134,7 +134,11 @@ to get the vignettes.
   length)` places loci evenly along chromosomes (Haldane map function), and
   `linkage(rates)` sets the recombination fraction between each pair of
   neighbouring loci; pass either as `evomod_model(..., recombination = )`.
-* **Each generation**: the optimum moves (directional regimes), fitness
+* **Regimes**: `drift()`, `stabilizing()`, `directional()` (the optimum moves
+  steadily) and `fluctuating()` (the optimum jumps up or down every few
+  generations, all traits together, independently, or in blocks; do O &
+  Whitlock 2023).
+* **Each generation**: the optimum moves (directional and fluctuating regimes), fitness
   `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed, every individual mutates
   (each allele with probability `rate`, adding a `N(0, cov)` vector), and `n`
   offspring are produced from parents drawn with probability proportional to

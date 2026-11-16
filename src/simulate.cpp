@@ -46,6 +46,24 @@ arma::mat genic_covariance(const Architecture& arch, const arma::cube& alleles) 
   return genic * (static_cast<double>(n) / (n - 1));
 }
 
+// Each block of traits draws a direction (+1 or -1) and its optimum moves by
+// step in that direction, unless that would take one of its traits outside
+// [lower, upper]; at a bound the optimum then stays or moves inward with
+// probability 1/2 each (do O & Whitlock 2023).
+void fluctuate(arma::vec& theta, const arma::vec& step, const arma::uvec& block,
+               const arma::vec& lower, const arma::vec& upper) {
+  arma::uword n_blocks = block.max() + 1;
+  for (arma::uword b = 0; b < n_blocks; ++b) {
+    arma::uvec traits = arma::find(block == b);
+    if (traits.n_elem == 0) continue;
+    double d = R::unif_rand() < 0.5 ? -1.0 : 1.0;
+    arma::vec moved = theta.elem(traits) + d * step.elem(traits);
+    const double tol = 1e-9;
+    if (arma::all(moved >= lower.elem(traits) - tol) && arma::all(moved <= upper.elem(traits) + tol))
+      theta.elem(traits) = moved;
+  }
+}
+
 struct Records {
   std::vector<int> generation;
   std::vector<arma::vec> theta, mean_x, mean_z;
@@ -96,8 +114,13 @@ void phenotypes(const Architecture& arch, double env_sd, const arma::cube& allel
 //
 // alleles: genome rows x alleles x individuals. traits: number of traits.
 // z: current phenotypes (traits x individuals), or a 0 x 0 matrix to draw them. Each regime is a list with
-// generations, selective (bool), theta (optimum at the start), delta_theta
-// (added to theta before selection in every generation) and omega.
+// generations, selective (bool), reset_theta (bool) and theta (if reset_theta,
+// the optimum at the start of the regime; otherwise the optimum carries over
+// from the previous regime), delta_theta (added to theta before selection in
+// every generation), omega, and for fluctuating optima: every (jump interval),
+// step (jump size per trait), block (0-based block of each trait; traits of a
+// block jump together) and lower, upper (bounds; a jump that would leave
+// them is not taken).
 // Moments are recorded after every generation that is a multiple of
 // record_every, and for the starting state if record_start is true.
 // [[Rcpp::export]]
@@ -130,13 +153,23 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
     Rcpp::List regime = regimes[r];
     int n_gen = Rcpp::as<int>(regime["generations"]);
     bool selective = Rcpp::as<bool>(regime["selective"]);
-    theta = Rcpp::as<arma::vec>(regime["theta"]);
+    if (Rcpp::as<bool>(regime["reset_theta"])) theta = Rcpp::as<arma::vec>(regime["theta"]);
     arma::vec delta = Rcpp::as<arma::vec>(regime["delta_theta"]);
+    int every = Rcpp::as<int>(regime["every"]);
+    arma::vec step, lower, upper;
+    arma::uvec block;
+    if (every > 0) {
+      step = Rcpp::as<arma::vec>(regime["step"]);
+      block = Rcpp::as<arma::uvec>(regime["block"]);
+      lower = Rcpp::as<arma::vec>(regime["lower"]);
+      upper = Rcpp::as<arma::vec>(regime["upper"]);
+    }
     arma::mat omega = Rcpp::as<arma::mat>(regime["omega"]);
 
     for (int g = 0; g < n_gen; ++g) {
       Rcpp::checkUserInterrupt();
       theta += delta;
+      if (every > 0 && g > 0 && g % every == 0) fluctuate(theta, step, block, lower, upper);
       if (selective) {
         arma::vec logw = GaussianFitness(theta, omega).log_fitness(Z);
         w = arma::exp(logw - logw.max());
