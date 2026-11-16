@@ -103,8 +103,12 @@ mutational_covariance(pop, n = 10000)
   architectures; epistasis; linkage and the genic/LD parts of G.
 * `vignette("melo-marroig-2015")`: reproducing the simulations of Melo &
   Marroig (2015), with results of a full run.
+* `vignette("fluctuating-environments")`: the claims of do O & Whitlock
+  (2023) about fluctuating optima, tested on four genetic architectures,
+  with results of a full run.
 * Command-line examples in `system.file("examples", package = "evomod2")`:
-  `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`.
+  `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`,
+  `fluctuating_environments.R`.
 
 Install with `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)`
 to get the vignettes.
@@ -120,6 +124,9 @@ to get the vignettes.
   * `multilinear()`: `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a
     `traits × traits × traits` tensor `ε` shared by all pairs of loci
     (Hansen & Wagner 2001).
+  * `contribution_matrix()`: the model of do O & Whitlock (2023), `x = C a`
+    with weight genes `a` and contribution genes `C` as separate loci, used
+    with `contribution_mutation()`.
   * `binary_b()`: the model of Melo & Marroig (2015). Each allele has a
     scalar effect `y` and a column of a binary matrix `B` saying which traits
     it affects, `x = B y`. Used with `binary_b_mutation()`, which mutates `y`
