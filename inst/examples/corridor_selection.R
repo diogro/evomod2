@@ -124,9 +124,10 @@ plot_results <- function(outdir) {
     geom_jitter(width = 0.12, alpha = 0.5, size = 1) +
     facet_wrap(~ architecture) +
     scale_colour_manual(values = colours, guide = "none") +
+    scale_x_discrete(labels = function(x) sub(" (", "\n(", sub("Within ", "Within\n", x), fixed = TRUE)) +
     labs(x = NULL, y = "Average genetic correlation",
          title = "Final G matrices", subtitle = sprintf("Generation %d", max(long$generation))) +
-    theme_minimal() + theme(axis.text.x = element_text(angle = 20, hjust = 1))
+    theme_minimal()
 
   # mean final G correlation matrix of each architecture
   final_G <- lapply(split(res, vapply(res, function(r) r$correlations$architecture[1], "")),
