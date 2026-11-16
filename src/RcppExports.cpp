@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // evolve_cpp
-Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, Rcpp::List recombination, double env_sd, Rcpp::List regimes, int generation, int record_every, bool record_start);
-RcppExport SEXP _evomod2_evolve_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP zSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP recombinationSEXP, SEXP env_sdSEXP, SEXP regimesSEXP, SEXP generationSEXP, SEXP record_everySEXP, SEXP record_startSEXP) {
+Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, Rcpp::List recombination, double env_sd, Rcpp::List regimes, std::string life_cycle, int generation, int record_every, bool record_start);
+RcppExport SEXP _evomod2_evolve_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP zSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP recombinationSEXP, SEXP env_sdSEXP, SEXP regimesSEXP, SEXP life_cycleSEXP, SEXP generationSEXP, SEXP record_everySEXP, SEXP record_startSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,10 +25,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type recombination(recombinationSEXP);
     Rcpp::traits::input_parameter< double >::type env_sd(env_sdSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type regimes(regimesSEXP);
+    Rcpp::traits::input_parameter< std::string >::type life_cycle(life_cycleSEXP);
     Rcpp::traits::input_parameter< int >::type generation(generationSEXP);
     Rcpp::traits::input_parameter< int >::type record_every(record_everySEXP);
     Rcpp::traits::input_parameter< bool >::type record_start(record_startSEXP);
-    rcpp_result_gen = Rcpp::wrap(evolve_cpp(alleles, traits, z, architecture, mutation, recombination, env_sd, regimes, generation, record_every, record_start));
+    rcpp_result_gen = Rcpp::wrap(evolve_cpp(alleles, traits, z, architecture, mutation, recombination, env_sd, regimes, life_cycle, generation, record_every, record_start));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -121,9 +122,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fenwick_sample_cpp
+arma::uvec fenwick_sample_cpp(arma::vec w, int draws, int update_index, double update_value);
+RcppExport SEXP _evomod2_fenwick_sample_cpp(SEXP wSEXP, SEXP drawsSEXP, SEXP update_indexSEXP, SEXP update_valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type draws(drawsSEXP);
+    Rcpp::traits::input_parameter< int >::type update_index(update_indexSEXP);
+    Rcpp::traits::input_parameter< double >::type update_value(update_valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(fenwick_sample_cpp(w, draws, update_index, update_value));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_evomod2_evolve_cpp", (DL_FUNC) &_evomod2_evolve_cpp, 11},
+    {"_evomod2_evolve_cpp", (DL_FUNC) &_evomod2_evolve_cpp, 12},
     {"_evomod2_genotypic_values_cpp", (DL_FUNC) &_evomod2_genotypic_values_cpp, 3},
     {"_evomod2_genic_covariance_cpp", (DL_FUNC) &_evomod2_genic_covariance_cpp, 2},
     {"_evomod2_single_mutation_effects_cpp", (DL_FUNC) &_evomod2_single_mutation_effects_cpp, 5},
@@ -131,6 +146,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_evomod2_local_effects_cpp", (DL_FUNC) &_evomod2_local_effects_cpp, 2},
     {"_evomod2_mutate_cpp", (DL_FUNC) &_evomod2_mutate_cpp, 2},
     {"_evomod2_log_fitness_cpp", (DL_FUNC) &_evomod2_log_fitness_cpp, 3},
+    {"_evomod2_fenwick_sample_cpp", (DL_FUNC) &_evomod2_fenwick_sample_cpp, 4},
     {NULL, NULL, 0}
 };
 

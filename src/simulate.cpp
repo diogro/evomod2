@@ -26,22 +26,32 @@ arma::uvec sample_weighted(const arma::vec& w, arma::uword n) {
 // sum of allele effects.
 arma::mat genic_covariance(const Architecture& arch, const arma::cube& alleles) {
   arma::uword n = alleles.n_slices, n_alleles = alleles.n_cols, loci = n_alleles / 2;
-  arma::mat E0 = arch.allele_effects(alleles.slice(0));
-  if (E0.n_elem == 0) return arma::mat();
-  arma::uword p = E0.n_rows;
-  // allele effects of every individual, traits x alleles x individuals
-  arma::cube E(p, n_alleles, n);
-  E.slice(0) = E0;
-  for (arma::uword i = 1; i < n; ++i) E.slice(i) = arch.allele_effects(alleles.slice(i));
-  arma::mat genic(p, p, arma::fill::zeros);
-  arma::mat A(p, 2 * n);  // both allele copies of one locus, pooled over individuals
-  for (arma::uword l = 0; l < loci; ++l) {
-    for (arma::uword i = 0; i < n; ++i) {
-      A.col(2 * i) = E.slice(i).col(2 * l);
-      A.col(2 * i + 1) = E.slice(i).col(2 * l + 1);
+  arma::mat E = arch.allele_effects(alleles.slice(0));
+  if (E.n_elem == 0) return arma::mat();
+  arma::uword p = E.n_rows;
+  // per locus: sums and cross-products of allele effects, pooled over both
+  // allele copies of every individual (plain loops: p is small)
+  arma::mat sums(p, loci, arma::fill::zeros);
+  arma::cube cross(p, p, loci, arma::fill::zeros);
+  for (arma::uword i = 0; i < n; ++i) {
+    if (i > 0) E = arch.allele_effects(alleles.slice(i));
+    for (arma::uword a = 0; a < n_alleles; ++a) {
+      arma::uword l = a / 2;
+      const double* e = E.colptr(a);
+      double* s = sums.colptr(l);
+      double* c = cross.slice_memptr(l);
+      for (arma::uword r = 0; r < p; ++r) {
+        s[r] += e[r];
+        for (arma::uword q = 0; q <= r; ++q) c[q * p + r] += e[r] * e[q];
+      }
     }
-    arma::vec mu = arma::mean(A, 1);
-    genic += 2.0 * (A * A.t() / (2.0 * n) - mu * mu.t());
+  }
+  arma::mat genic(p, p, arma::fill::zeros);
+  double m = 2.0 * n;
+  for (arma::uword l = 0; l < loci; ++l) {
+    arma::mat c = arma::symmatl(cross.slice(l));
+    arma::vec mu = sums.col(l) / m;
+    genic += 2.0 * (c / m - mu * mu.t());
   }
   return genic * (static_cast<double>(n) / (n - 1));
 }
@@ -63,6 +73,45 @@ void fluctuate(arma::vec& theta, const arma::vec& step, const arma::uvec& block,
       theta.elem(traits) = moved;
   }
 }
+
+// Weights with O(log n) updates and weighted sampling (Fenwick tree), for the
+// Moran life cycle, where one individual's fitness changes at every event.
+struct Fenwick {
+  arma::vec tree;   // 1-based partial sums
+  arma::uword n = 0, top = 1;
+  double total = 0;
+
+  void build(const arma::vec& w) {
+    n = w.n_elem;
+    tree.zeros(n + 1);
+    for (arma::uword i = 1; i <= n; ++i) tree[i] = w[i - 1];
+    for (arma::uword i = 1; i <= n; ++i) {
+      arma::uword j = i + (i & (~i + 1));
+      if (j <= n) tree[j] += tree[i];
+    }
+    total = arma::accu(w);
+    top = 1;
+    while (top * 2 <= n) top *= 2;
+  }
+
+  void add(arma::uword i, double delta) {
+    total += delta;
+    for (++i; i <= n; i += i & (~i + 1)) tree[i] += delta;
+  }
+
+  // index (0-based) drawn with probability proportional to its weight
+  arma::uword sample() const {
+    double u = R::unif_rand() * total;
+    arma::uword pos = 0;
+    for (arma::uword step = top; step > 0; step >>= 1) {
+      if (pos + step <= n && tree[pos + step] <= u) {
+        pos += step;
+        u -= tree[pos];
+      }
+    }
+    return std::min(pos, n - 1);
+  }
+};
 
 struct Records {
   std::vector<int> generation;
@@ -129,7 +178,7 @@ void phenotypes(const Architecture& arch, double env_sd, const arma::cube& allel
 // [[Rcpp::export]]
 Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture,
                       Rcpp::List mutation, Rcpp::List recombination, double env_sd,
-                      Rcpp::List regimes,
+                      Rcpp::List regimes, std::string life_cycle,
                       int generation, int record_every, bool record_start) {
   std::unique_ptr<Architecture> arch = make_architecture(architecture);
   std::unique_ptr<Mutation> mut = make_mutation(mutation);
@@ -158,8 +207,12 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
             mean_fitness(Rcpp::as<bool>(r0["selective"]), Rcpp::as<arma::mat>(r0["omega"])));
   }
 
-  arma::cube offspring(alleles.n_rows, n_alleles, n);
+  bool moran = life_cycle == "moran";
+  if (!moran && life_cycle != "wright_fisher") Rcpp::stop("unknown life cycle: " + life_cycle);
+  arma::cube offspring(moran ? 0 : alleles.n_rows, moran ? 0 : n_alleles, moran ? 0 : n);
+  arma::mat kid(alleles.n_rows, n_alleles);
   arma::vec w(n);
+  Fenwick weights;
 
   for (R_xlen_t r = 0; r < regimes.size(); ++r) {
     Rcpp::List regime = regimes[r];
@@ -182,18 +235,41 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
       Rcpp::checkUserInterrupt();
       theta += delta;
       if (every > 0 && g > 0 && g % every == 0) fluctuate(theta, step, block, lower, upper);
+      GaussianFitness fitness(theta, omega);
+      double shift = 0;
       if (selective) {
-        arma::vec logw = GaussianFitness(theta, omega).log_fitness(Z);
-        w = arma::exp(logw - logw.max());
+        arma::vec logw = fitness.log_fitness(Z);
+        shift = logw.max();
+        w = arma::exp(logw - shift);
       } else {
         w.ones();
       }
-      for (arma::uword i = 0; i < n; ++i) mut->mutate(alleles.slice(i));
-      arma::uvec sires = sample_weighted(w, n), dames = sample_weighted(w, n);
-      for (arma::uword i = 0; i < n; ++i)
-        recomb->offspring(alleles.slice(sires[i]), alleles.slice(dames[i]), offspring.slice(i));
-      alleles.swap(offspring);
-      phenotypes(*arch, env_sd, alleles, X, Z);
+      if (moran) {
+        // n birth-death events: a random individual dies and is replaced by
+        // the offspring of two parents drawn in proportion to fitness; the
+        // offspring mutates at the per-generation rates
+        weights.build(w);
+        for (arma::uword e = 0; e < n; ++e) {
+          arma::uword dead = std::min(static_cast<arma::uword>(R::unif_rand() * n), n - 1);
+          arma::uword sire = weights.sample(), dame = weights.sample();
+          recomb->offspring(alleles.slice(sire), alleles.slice(dame), kid);
+          mut->mutate(kid);
+          alleles.slice(dead) = kid;
+          X.col(dead) = arch->genotypic_value(kid);
+          Z.col(dead) = X.col(dead) + env_sd * rnorm_vec(p);
+          double w_new = selective ?
+            std::exp(fitness.log_fitness(arma::mat(Z.col(dead)))[0] - shift) : 1.0;
+          weights.add(dead, w_new - w[dead]);
+          w[dead] = w_new;
+        }
+      } else {
+        for (arma::uword i = 0; i < n; ++i) mut->mutate(alleles.slice(i));
+        arma::uvec sires = sample_weighted(w, n), dames = sample_weighted(w, n);
+        for (arma::uword i = 0; i < n; ++i)
+          recomb->offspring(alleles.slice(sires[i]), alleles.slice(dames[i]), offspring.slice(i));
+        alleles.swap(offspring);
+        phenotypes(*arch, env_sd, alleles, X, Z);
+      }
       ++generation;
       if (generation % record_every == 0)
         rec.add(generation, theta, X, Z, *arch, alleles, mean_fitness(selective, omega));
@@ -257,4 +333,18 @@ arma::mat mutate_cpp(arma::mat alleles, Rcpp::List mutation) {
 // [[Rcpp::export]]
 arma::vec log_fitness_cpp(arma::mat z, arma::vec theta, arma::mat omega) {
   return GaussianFitness(theta, omega).log_fitness(z);
+}
+
+// Testing helper: draws from the Fenwick tree of weights w, after setting
+// weight `update_index` (0-based) to `update_value` if update_index >= 0.
+// [[Rcpp::export]]
+arma::uvec fenwick_sample_cpp(arma::vec w, int draws, int update_index, double update_value) {
+  Fenwick f;
+  f.build(w);
+  if (update_index >= 0) {
+    f.add(update_index, update_value - w[update_index]);
+  }
+  arma::uvec out(draws);
+  for (int i = 0; i < draws; ++i) out[i] = f.sample();
+  return out;
 }

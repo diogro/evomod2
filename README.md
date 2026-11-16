@@ -137,6 +137,10 @@ to get the vignettes.
   `local_effects()` gives each locus's effect in the background of the rest
   of the genome.
 * **Phenotypes**: `z = x + e`, `e ~ N(0, env_sd²)`.
+* **Life cycle**: discrete generations (`wright_fisher()`, the default) or
+  overlapping generations (`moran()`: a generation is `n` birth-death events,
+  each replacing a random individual by the offspring of two parents drawn
+  in proportion to fitness); `evomod_model(..., life_cycle = moran())`.
 * **Recombination**: loci are unlinked by default. `genetic_map(chromosomes,
   length)` places loci evenly along chromosomes (Haldane map function), and
   `linkage(rates)` sets the recombination fraction between each pair of

@@ -47,7 +47,9 @@ model <- evomod_model(
 model
 ```
 
-Other architectures are `binary_b()`, the binary ontogenetic matrix of the
+Generations are discrete by default; `life_cycle = moran()` gives
+overlapping generations, where each generation is `n` birth-death events
+(see `?life_cycles`). Other architectures are `binary_b()`, the binary ontogenetic matrix of the
 original evomod model (with `binary_b_mutation()`), and `multilinear()`,
 pairwise multilinear epistasis (see `?architectures`). Loci recombine freely
 unless the model has a genetic map (`?recombination`).

@@ -9,7 +9,8 @@ evomod_model(
   mutation,
   env_sd = 0,
   init_sd = 0,
-  recombination = free_recombination()
+  recombination = free_recombination(),
+  life_cycle = wright_fisher()
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ reference genotype.}
 
 \item{recombination}{how loci are inherited, see \link{recombination}; free
 recombination by default.}
+
+\item{life_cycle}{\code{\link[=wright_fisher]{wright_fisher()}} (discrete generations, the default)
+or \code{\link[=moran]{moran()}} (overlapping generations).}
 }
 \value{
 An \code{evomod_model} object.

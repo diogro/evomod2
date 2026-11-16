@@ -77,7 +77,8 @@ run_regimes <- function(pop, regimes, record_start) {
   z <- if (is.null(pop$z)) matrix(0, 0, 0) else pop$z
   out <- evolve_cpp(pop$alleles, model$traits, z, model$architecture, model$mutation,
                     model$recombination, model$env_sd,
-                    resolved, pop$generation, pop$record_every, record_start)
+                    resolved, life_cycle_of(model), pop$generation, pop$record_every,
+                    record_start)
   pop$alleles <- out$alleles
   pop$x <- out$x
   pop$z <- out$z
@@ -90,6 +91,8 @@ run_regimes <- function(pop, regimes, record_start) {
   }))
   pop
 }
+
+life_cycle_of <- function(model) if (is.null(model$life_cycle)) "wright_fisher" else model$life_cycle$type
 
 append_records <- function(old, new) {
   new$generation <- as.integer(new$generation)

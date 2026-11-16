@@ -62,6 +62,36 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
             class = "evomod_mutation")
 }
 
+#' Life cycles
+#'
+#' * `wright_fisher()` (the default): discrete generations. Every generation,
+#'   each individual mutates and the whole population is replaced by `n`
+#'   offspring of parents drawn with probability proportional to fitness.
+#' * `moran()`: overlapping generations. A generation is `n` birth-death
+#'   events; at each event a random individual dies and is replaced by the
+#'   offspring of two parents drawn with probability proportional to fitness
+#'   (they can be the same individual, as in `wright_fisher()`). The offspring
+#'   mutates with the model's per-generation rates, so the mutational input per
+#'   generation is the same as with `wright_fisher()`. Drift per generation is
+#'   about twice as strong as with `wright_fisher()` at the same `n`.
+#'
+#' Statistics are recorded, and directional or fluctuating optima move,
+#' between generations.
+#'
+#' @return An `evomod_life_cycle` object, for [evomod_model()].
+#' @examples
+#' moran()
+#' @name life_cycles
+NULL
+
+#' @rdname life_cycles
+#' @export
+wright_fisher <- function() structure(list(type = "wright_fisher"), class = "evomod_life_cycle")
+
+#' @rdname life_cycles
+#' @export
+moran <- function() structure(list(type = "moran"), class = "evomod_life_cycle")
+
 #' Simulation model
 #'
 #' Combines a genetic architecture, a mutation model, recombination and
@@ -71,6 +101,8 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
 #' @param mutation a mutation model matching the architecture, see [mutation()].
 #' @param recombination how loci are inherited, see [recombination]; free
 #'   recombination by default.
+#' @param life_cycle [wright_fisher()] (discrete generations, the default)
+#'   or [moran()] (overlapping generations).
 #' @param env_sd standard deviation of environmental effects (`z = x + e`).
 #' @param init_sd standard deviation of allelic effects in a new population
 #'   (`y` for [binary_b()]); 0 (the default) starts every individual at the
@@ -81,7 +113,9 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
 #'                       mutation(rate = 0.005, cov = 0.05), env_sd = 1)
 #' @export
 evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0,
-                         recombination = free_recombination()) {
+                         recombination = free_recombination(), life_cycle = wright_fisher()) {
+  if (!inherits(life_cycle, "evomod_life_cycle"))
+    stop("`life_cycle` must be wright_fisher() or moran()", call. = FALSE)
   if (!inherits(architecture, "evomod_architecture"))
     stop("`architecture` must be created with additive(), multilinear(), ...", call. = FALSE)
   if (!inherits(mutation, "evomod_mutation"))
@@ -105,7 +139,7 @@ evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0,
   }
   recombination <- resolve_recombination(recombination, architecture$loci)
   structure(list(architecture = architecture, mutation = mutation,
-                 recombination = recombination,
+                 recombination = recombination, life_cycle = life_cycle,
                  env_sd = env_sd, init_sd = init_sd, traits = p,
                  loci = architecture$loci),
             class = "evomod_model")
@@ -120,6 +154,7 @@ print.evomod_model <- function(x, ...) {
   cat("  recombination:", if (r$type == "free") "free" else
       if (r$map_type == "genetic_map") paste(r$chromosomes, "chromosome(s) of", r$length, "Morgans")
       else "linkage map", "\n")
+  cat("  life cycle:  ", if (is.null(x$life_cycle)) "wright_fisher" else x$life_cycle$type, "\n")
   cat("  env_sd:      ", x$env_sd, "  init_sd:", x$init_sd, "\n")
   invisible(x)
 }
