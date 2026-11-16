@@ -168,6 +168,7 @@ plot_results <- function(outdir) {
   names(summary) <- sub("value.", "", names(summary), fixed = TRUE)
   summary$total <- summary[["Genic (pleiotropy)"]] + summary[["Linkage disequilibrium"]]
   summary$correlation <- gsub("\n", " ", summary$correlation)
+  old <- options(width = 200); on.exit(options(old))
   print(summary, digits = 2, row.names = FALSE)
   invisible(list(trace = trace, parts = parts_trace, final = final_plot, summary = summary))
 }
