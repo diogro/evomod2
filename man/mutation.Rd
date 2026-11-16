@@ -2,21 +2,38 @@
 % Please edit documentation in R/model.R
 \name{mutation}
 \alias{mutation}
+\alias{hoc_mutation}
 \alias{contribution_mutation}
 \alias{binary_b_mutation}
 \title{Mutation models}
 \usage{
-mutation(rate, cov)
+mutation(rate, cov, persistence = 1)
 
-contribution_mutation(rate_weight, rate_contribution, sd)
+hoc_mutation(rate, cov)
 
-binary_b_mutation(rate, sd, rate_b, b_mutation = c("flip", "random"))
+contribution_mutation(rate_weight, rate_contribution, sd, persistence = 1)
+
+binary_b_mutation(
+  rate,
+  sd,
+  rate_b,
+  b_mutation = c("flip", "random"),
+  persistence = 1
+)
 }
 \arguments{
 \item{rate}{mutation probability per allele per generation.}
 
 \item{cov}{mutational covariance matrix (traits x traits), or a single
 number \code{s}, meaning \code{s^2} times the identity.}
+
+\item{persistence}{how much of the old effect a mutation keeps: the new
+effect is \code{persistence * old + draw}. 1 (the default) is a random walk,
+where mutational effects accumulate; 0 is the house of cards model
+(Kingman 1978; Turelli 1984), where a mutation replaces the effect with a
+fresh draw unrelated to it; values in between give a regression towards
+the reference genotype (Zeng & Cockerham 1993). For \code{\link[=binary_b]{binary_b()}} it applies
+to \code{y}.}
 
 \item{rate_weight, rate_contribution}{mutation probability per allele per
 generation of weight genes and of contribution genes.}
@@ -32,7 +49,8 @@ An \code{evomod_mutation} object.
 }
 \description{
 \itemize{
-\item \code{mutation()}: for \code{\link[=additive]{additive()}} and \code{\link[=multilinear]{multilinear()}} architectures. Each
+\item \code{mutation()}: for \code{\link[=additive]{additive()}} and \code{\link[=multilinear]{multilinear()}} architectures;
+\code{hoc_mutation()} is the house of cards version (\code{persistence = 0}). Each
 allele mutates with probability \code{rate} per generation; a mutation adds a
 draw from a multivariate normal with mean zero and covariance \code{cov} to the
 allele's effect vector.
@@ -50,6 +68,7 @@ as in the C code used for the simulations of Melo & Marroig (2015).
 }
 \examples{
 mutation(rate = 0.005, cov = 0.05)
+hoc_mutation(rate = 0.005, cov = 0.5)   # house of cards
 binary_b_mutation(rate = 0.0005, sd = 0.2, rate_b = 0.0001)
 mutation(rate = 0.005, cov = matrix(c(1, 0.5, 0.5, 1), 2) * 0.01)
 }

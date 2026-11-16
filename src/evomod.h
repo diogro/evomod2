@@ -103,11 +103,14 @@ public:
   virtual double expected_mutations(const arma::mat& alleles) const = 0;
 };
 
-// Each allele mutates with probability `rate`; a mutation adds a draw from
-// MvNormal(0, cov) to its effect vector.
+// Each allele mutates with probability `rate`; a mutation replaces its effect
+// vector e by persistence * e + MvNormal(0, cov): persistence = 1 is a random
+// walk (effects accumulate), 0 the house of cards model (a fresh draw,
+// unrelated to the old effect; Kingman 1978, Turelli 1984). The same holds for
+// the other mutation models below.
 class GaussianMutation : public Mutation {
 public:
-  GaussianMutation(double rate, const arma::mat& cov);
+  GaussianMutation(double rate, const arma::mat& cov, double persistence = 1.0);
   void mutate(arma::mat& alleles) const override;
   void mutate_one(arma::mat& alleles) const override;
   double expected_mutations(const arma::mat& alleles) const override {
@@ -116,6 +119,7 @@ public:
 private:
   double rate_;
   arma::mat chol_lower_;  // cov = L L'
+  double persistence_;
 };
 
 // Mutation for BinaryB genomes. Each allele's y mutates with probability
@@ -125,8 +129,10 @@ private:
 // the published simulations).
 class BinaryBMutation : public Mutation {
 public:
-  BinaryBMutation(double rate_y, double sd_y, double rate_b, bool random_state)
-    : rate_y_(rate_y), sd_y_(sd_y), rate_b_(rate_b), random_state_(random_state) {}
+  BinaryBMutation(double rate_y, double sd_y, double rate_b, bool random_state,
+                  double persistence = 1.0)
+    : rate_y_(rate_y), sd_y_(sd_y), rate_b_(rate_b), random_state_(random_state),
+      persistence_(persistence) {}
   void mutate(arma::mat& alleles) const override;
   void mutate_one(arma::mat& alleles) const override;
   double expected_mutations(const arma::mat& alleles) const override {
@@ -135,6 +141,7 @@ public:
 private:
   double rate_y_, sd_y_, rate_b_;
   bool random_state_;
+  double persistence_;
 };
 
 // Mutation for contribution matrix genomes: alleles of the first
@@ -143,8 +150,9 @@ private:
 class ContributionMutation : public Mutation {
 public:
   ContributionMutation(double rate_weight, double rate_contribution, double sd,
-                       arma::uword weight_loci)
-    : rate_w_(rate_weight), rate_c_(rate_contribution), sd_(sd), weight_loci_(weight_loci) {}
+                       arma::uword weight_loci, double persistence = 1.0)
+    : rate_w_(rate_weight), rate_c_(rate_contribution), sd_(sd), weight_loci_(weight_loci),
+      persistence_(persistence) {}
   void mutate(arma::mat& alleles) const override;
   void mutate_one(arma::mat& alleles) const override;
   double expected_mutations(const arma::mat& alleles) const override {
@@ -153,6 +161,7 @@ public:
 private:
   double rate_w_, rate_c_, sd_;
   arma::uword weight_loci_;
+  double persistence_;
 };
 
 // ---- Fitness --------------------------------------------------------------

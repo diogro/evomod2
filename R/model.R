@@ -1,6 +1,7 @@
 #' Mutation models
 #'
-#' * `mutation()`: for [additive()] and [multilinear()] architectures. Each
+#' * `mutation()`: for [additive()] and [multilinear()] architectures;
+#'   `hoc_mutation()` is the house of cards version (`persistence = 0`). Each
 #'   allele mutates with probability `rate` per generation; a mutation adds a
 #'   draw from a multivariate normal with mean zero and covariance `cov` to the
 #'   allele's effect vector.
@@ -18,47 +19,70 @@
 #' @param rate mutation probability per allele per generation.
 #' @param cov mutational covariance matrix (traits x traits), or a single
 #'   number `s`, meaning `s^2` times the identity.
+#' @param persistence how much of the old effect a mutation keeps: the new
+#'   effect is `persistence * old + draw`. 1 (the default) is a random walk,
+#'   where mutational effects accumulate; 0 is the house of cards model
+#'   (Kingman 1978; Turelli 1984), where a mutation replaces the effect with a
+#'   fresh draw unrelated to it; values in between give a regression towards
+#'   the reference genotype (Zeng & Cockerham 1993). For [binary_b()] it applies
+#'   to `y`.
 #' @param sd standard deviation of mutations in `y`.
 #' @param rate_b mutation probability per entry of `B` per generation.
 #' @param b_mutation `"random"` or `"flip"`, see above.
 #' @return An `evomod_mutation` object.
 #' @examples
 #' mutation(rate = 0.005, cov = 0.05)
+#' hoc_mutation(rate = 0.005, cov = 0.5)   # house of cards
 #' binary_b_mutation(rate = 0.0005, sd = 0.2, rate_b = 0.0001)
 #' mutation(rate = 0.005, cov = matrix(c(1, 0.5, 0.5, 1), 2) * 0.01)
 #' @export
-mutation <- function(rate, cov) {
+mutation <- function(rate, cov, persistence = 1) {
   if (!is.numeric(rate) || length(rate) != 1 || rate < 0 || rate > 1)
     stop("`rate` must be a probability", call. = FALSE)
-  structure(list(type = "gaussian", rate = rate, cov = cov), class = "evomod_mutation")
+  check_persistence(persistence)
+  structure(list(type = "gaussian", rate = rate, cov = cov, persistence = persistence),
+            class = "evomod_mutation")
+}
+
+#' @rdname mutation
+#' @export
+hoc_mutation <- function(rate, cov) mutation(rate, cov, persistence = 0)
+
+check_persistence <- function(persistence) {
+  if (!is.numeric(persistence) || length(persistence) != 1 || persistence < 0 || persistence > 1)
+    stop("`persistence` must be a number between 0 and 1", call. = FALSE)
 }
 
 #' @rdname mutation
 #' @param rate_weight,rate_contribution mutation probability per allele per
 #'   generation of weight genes and of contribution genes.
 #' @export
-contribution_mutation <- function(rate_weight, rate_contribution, sd) {
+contribution_mutation <- function(rate_weight, rate_contribution, sd, persistence = 1) {
+  check_persistence(persistence)
   for (r in list(rate_weight, rate_contribution))
     if (!is.numeric(r) || length(r) != 1 || r < 0 || r > 1)
       stop("mutation rates must be probabilities", call. = FALSE)
   if (!is.numeric(sd) || length(sd) != 1 || sd < 0)
     stop("`sd` must be a non-negative number", call. = FALSE)
   structure(list(type = "contribution", rate_weight = rate_weight,
-                 rate_contribution = rate_contribution, sd = sd),
+                 rate_contribution = rate_contribution, sd = sd, persistence = persistence),
             class = "evomod_mutation")
 }
 
 #' @rdname mutation
 #' @export
-binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")) {
+binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random"),
+                              persistence = 1) {
   b_mutation <- match.arg(b_mutation)
+  check_persistence(persistence)
   for (r in list(rate, rate_b))
     if (!is.numeric(r) || length(r) != 1 || r < 0 || r > 1)
       stop("`rate` and `rate_b` must be probabilities", call. = FALSE)
   if (!is.numeric(sd) || length(sd) != 1 || sd < 0)
     stop("`sd` must be a non-negative number", call. = FALSE)
   structure(list(type = "binary_b", rate = rate, sd = sd, rate_b = rate_b,
-                 b_mutation = b_mutation, random_state = b_mutation == "random"),
+                 b_mutation = b_mutation, random_state = b_mutation == "random",
+                 persistence = persistence),
             class = "evomod_mutation")
 }
 
@@ -149,7 +173,10 @@ evomod_model <- function(architecture, mutation, env_sd = 0, init_sd = 0,
 print.evomod_model <- function(x, ...) {
   cat("<evomod model>\n")
   cat("  architecture:", x$architecture$type, "-", x$loci, "loci,", x$traits, "traits\n")
-  cat("  mutation:     rate", x$mutation$rate, "per allele\n")
+  pers <- if (is.null(x$mutation$persistence)) 1 else x$mutation$persistence
+  cat("  mutation:     rate", x$mutation$rate, "per allele,",
+      if (pers == 1) "random walk" else if (pers == 0) "house of cards" else
+        paste("persistence", pers), "\n")
   r <- x$recombination
   cat("  recombination:", if (r$type == "free") "free" else
       if (r$map_type == "genetic_map") paste(r$chromosomes, "chromosome(s) of", r$length, "Morgans")

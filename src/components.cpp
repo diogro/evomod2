@@ -114,7 +114,8 @@ arma::mat ContributionMatrix::local_effects(const arma::mat& alleles) const {
 
 // ---- Mutation ---------------------------------------------------------------
 
-GaussianMutation::GaussianMutation(double rate, const arma::mat& cov) : rate_(rate) {
+GaussianMutation::GaussianMutation(double rate, const arma::mat& cov, double persistence)
+  : rate_(rate), persistence_(persistence) {
   if (!arma::chol(chol_lower_, cov, "lower"))
     Rcpp::stop("mutation covariance matrix is not positive definite");
 }
@@ -125,14 +126,16 @@ void GaussianMutation::mutate(arma::mat& alleles) const {
   for (int i = 0; i < n_mut; ++i) {
     arma::uword a = static_cast<arma::uword>(R::unif_rand() * n_alleles);
     if (a == n_alleles) a = n_alleles - 1;
-    alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+    if (persistence_ == 1.0) alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+    else alleles.col(a) = persistence_ * alleles.col(a) + chol_lower_ * rnorm_vec(alleles.n_rows);
   }
 }
 
 void GaussianMutation::mutate_one(arma::mat& alleles) const {
   arma::uword n_alleles = alleles.n_cols;
   arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
-  alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+  if (persistence_ == 1.0) alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+  else alleles.col(a) = persistence_ * alleles.col(a) + chol_lower_ * rnorm_vec(alleles.n_rows);
 }
 
 void BinaryBMutation::mutate_one(arma::mat& alleles) const {
@@ -140,7 +143,8 @@ void BinaryBMutation::mutate_one(arma::mat& alleles) const {
   double y_events = rate_y_ * n_alleles, b_events = rate_b_ * n_alleles * p;
   if (R::unif_rand() * (y_events + b_events) < y_events) {
     arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
-    alleles(0, a) += sd_y_ * R::norm_rand();
+    double old = persistence_ == 1.0 ? alleles(0, a) : persistence_ * alleles(0, a);
+    alleles(0, a) = old + sd_y_ * R::norm_rand();
   } else {
     arma::uword n_entries = n_alleles * p;
     arma::uword pos = std::min(static_cast<arma::uword>(R::unif_rand() * n_entries), n_entries - 1);
@@ -154,7 +158,8 @@ void BinaryBMutation::mutate(arma::mat& alleles) const {
   int n_y = static_cast<int>(R::rbinom(static_cast<double>(n_alleles), rate_y_));
   for (int i = 0; i < n_y; ++i) {
     arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
-    alleles(0, a) += sd_y_ * R::norm_rand();
+    double old = persistence_ == 1.0 ? alleles(0, a) : persistence_ * alleles(0, a);
+    alleles(0, a) = old + sd_y_ * R::norm_rand();
   }
   arma::uword n_entries = n_alleles * p;
   int n_b = static_cast<int>(R::rbinom(static_cast<double>(n_entries), rate_b_));
@@ -170,12 +175,14 @@ void ContributionMutation::mutate(arma::mat& alleles) const {
   int n_w = static_cast<int>(R::rbinom(static_cast<double>(w), rate_w_));
   for (int i = 0; i < n_w; ++i) {
     arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * w), w - 1);
-    alleles(0, a) += sd_ * R::norm_rand();
+    double old = persistence_ == 1.0 ? alleles(0, a) : persistence_ * alleles(0, a);
+    alleles(0, a) = old + sd_ * R::norm_rand();
   }
   int n_c = static_cast<int>(R::rbinom(static_cast<double>(c), rate_c_));
   for (int i = 0; i < n_c; ++i) {
     arma::uword a = w + std::min(static_cast<arma::uword>(R::unif_rand() * c), c - 1);
-    alleles(0, a) += sd_ * R::norm_rand();
+    double old = persistence_ == 1.0 ? alleles(0, a) : persistence_ * alleles(0, a);
+    alleles(0, a) = old + sd_ * R::norm_rand();
   }
 }
 
@@ -187,7 +194,8 @@ void ContributionMutation::mutate_one(arma::mat& alleles) const {
     a = std::min(static_cast<arma::uword>(R::unif_rand() * w), w - 1);
   else
     a = w + std::min(static_cast<arma::uword>(R::unif_rand() * c), c - 1);
-  alleles(0, a) += sd_ * R::norm_rand();
+  double old = persistence_ == 1.0 ? alleles(0, a) : persistence_ * alleles(0, a);
+  alleles(0, a) = old + sd_ * R::norm_rand();
 }
 
 // ---- Fitness ----------------------------------------------------------------
@@ -246,17 +254,20 @@ std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec) {
 
 std::unique_ptr<Mutation> make_mutation(const Rcpp::List& spec) {
   std::string type = Rcpp::as<std::string>(spec["type"]);
+  // models saved before persistence existed are random walks
+  double persistence = spec.containsElementNamed("persistence") ?
+    Rcpp::as<double>(spec["persistence"]) : 1.0;
   if (type == "gaussian")
     return std::unique_ptr<Mutation>(new GaussianMutation(
-      Rcpp::as<double>(spec["rate"]), Rcpp::as<arma::mat>(spec["cov"])));
+      Rcpp::as<double>(spec["rate"]), Rcpp::as<arma::mat>(spec["cov"]), persistence));
   if (type == "binary_b")
     return std::unique_ptr<Mutation>(new BinaryBMutation(
       Rcpp::as<double>(spec["rate"]), Rcpp::as<double>(spec["sd"]),
-      Rcpp::as<double>(spec["rate_b"]), Rcpp::as<bool>(spec["random_state"])));
+      Rcpp::as<double>(spec["rate_b"]), Rcpp::as<bool>(spec["random_state"]), persistence));
   if (type == "contribution")
     return std::unique_ptr<Mutation>(new ContributionMutation(
       Rcpp::as<double>(spec["rate_weight"]), Rcpp::as<double>(spec["rate_contribution"]),
-      Rcpp::as<double>(spec["sd"]), Rcpp::as<arma::uword>(spec["weight_loci"])));
+      Rcpp::as<double>(spec["sd"]), Rcpp::as<arma::uword>(spec["weight_loci"]), persistence));
   Rcpp::stop("unknown mutation type: " + type);
 }
 

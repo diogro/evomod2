@@ -101,6 +101,9 @@ mutational_covariance(pop, n = 10000)
   statistics, G decomposition.
 * `vignette("architectures")`: binary B, additive and multilinear
   architectures; epistasis; linkage and the genic/LD parts of G.
+* `vignette("mutation-models")`: random walk and house of cards mutation
+  (`persistence`, `hoc_mutation()`): neutral equilibria, stabilizing
+  selection and a moving optimum.
 * `vignette("melo-marroig-2015")`: reproducing the simulations of Melo &
   Marroig (2015), with results of a full run.
 * `vignette("fluctuating-environments")`: the claims of do O & Whitlock
@@ -141,6 +144,9 @@ to get the vignettes.
   overlapping generations (`moran()`: a generation is `n` birth-death events,
   each replacing a random individual by the offspring of two parents drawn
   in proportion to fitness); `evomod_model(..., life_cycle = moran())`.
+* **Mutation**: a mutation replaces an allele's effect `e` by
+  `persistence * e + draw`; `persistence = 1` (default) is a random walk,
+  `0` the house of cards model (`hoc_mutation()`), for every architecture.
 * **Recombination**: loci are unlinked by default. `genetic_map(chromosomes,
   length)` places loci evenly along chromosomes (Haldane map function), and
   `linkage(rates)` sets the recombination fraction between each pair of
