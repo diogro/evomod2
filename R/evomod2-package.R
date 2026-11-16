@@ -1,7 +1,7 @@
 #' evomod2: individual-based simulations of genetic architecture evolution
 #'
-#' Build a model from an architecture ([additive()], [multilinear()]) and a
-#' mutation model ([mutation()]) with [evomod_model()], then run it through
+#' Build a model from an architecture ([additive()], [multilinear()],
+#' [binary_b()]) and a mutation model ([mutation()], [binary_b_mutation()]) with [evomod_model()], then run it through
 #' selection regimes ([drift()], [stabilizing()], [directional()]) with
 #' [evolve()]. Recorded statistics: [trait_means()], [variances()],
 #' [g_matrices()].

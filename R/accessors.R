@@ -61,8 +61,10 @@ p_matrices <- function(pop) matrices(pop, "P")
 
 #' Genomes and genotypic values
 #'
-#' * `genomes()`: allelic effects of the current population, an array
-#'   `traits x alleles x individuals` (alleles `2l - 1` and `2l` are locus `l`).
+#' * `genomes()`: genomes of the current population, an array
+#'   `rows x alleles x individuals` (alleles `2l - 1` and `2l` are locus `l`).
+#'   Rows are the allelic effect vector (one per trait), or, for [binary_b()],
+#'   `y` followed by the column of `B`.
 #' * `genotypic_values()`: genotypic values of genomes under an architecture
 #'   (traits x individuals).
 #' * `local_effects()`: effect of each locus of one genome in the background of
@@ -72,8 +74,8 @@ p_matrices <- function(pop) matrices(pop, "P")
 #'
 #' @param pop an `evomod_population`.
 #' @param x an architecture, model or population.
-#' @param alleles a genome (traits x alleles) or an array of genomes
-#'   (traits x alleles x individuals).
+#' @param alleles a genome (rows x alleles) or an array of genomes
+#'   (rows x alleles x individuals), see `genomes()`.
 #' @param individual index of an individual of `pop`.
 #' @name genomes
 NULL
@@ -94,13 +96,23 @@ as_architecture <- function(x) {
 genotypic_values <- function(x, alleles = genomes(x)) {
   arch <- as_architecture(x)
   if (length(dim(alleles)) == 2) alleles <- array(alleles, c(dim(alleles), 1))
-  genotypic_values_cpp(alleles, arch)
+  check_genome_rows(alleles, arch)
+  genotypic_values_cpp(alleles, arch$traits, arch)
 }
 
 #' @rdname genomes
 #' @export
 local_effects <- function(x, alleles = genomes(x)[, , individual], individual = 1) {
-  local_effects_cpp(as.matrix(alleles), as_architecture(x))
+  arch <- as_architecture(x)
+  alleles <- as.matrix(alleles)
+  check_genome_rows(alleles, arch)
+  local_effects_cpp(alleles, arch)
+}
+
+check_genome_rows <- function(alleles, arch) {
+  if (dim(alleles)[1] != arch$state_rows || dim(alleles)[2] != 2 * arch$loci)
+    stop("genomes of this architecture are ", arch$state_rows, " x ", 2 * arch$loci,
+         " (rows x alleles)", call. = FALSE)
 }
 
 #' Average correlations within and between modules

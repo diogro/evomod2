@@ -6,8 +6,8 @@
 \alias{evomod2-package}
 \title{evomod2: individual-based simulations of genetic architecture evolution}
 \description{
-Build a model from an architecture (\code{\link[=additive]{additive()}}, \code{\link[=multilinear]{multilinear()}}) and a
-mutation model (\code{\link[=mutation]{mutation()}}) with \code{\link[=evomod_model]{evomod_model()}}, then run it through
+Build a model from an architecture (\code{\link[=additive]{additive()}}, \code{\link[=multilinear]{multilinear()}},
+\code{\link[=binary_b]{binary_b()}}) and a mutation model (\code{\link[=mutation]{mutation()}}, \code{\link[=binary_b_mutation]{binary_b_mutation()}}) with \code{\link[=evomod_model]{evomod_model()}}, then run it through
 selection regimes (\code{\link[=drift]{drift()}}, \code{\link[=stabilizing]{stabilizing()}}, \code{\link[=directional]{directional()}}) with
 \code{\link[=evolve]{evolve()}}. Recorded statistics: \code{\link[=trait_means]{trait_means()}}, \code{\link[=variances]{variances()}},
 \code{\link[=g_matrices]{g_matrices()}}.

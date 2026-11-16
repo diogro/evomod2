@@ -3,10 +3,13 @@
 \name{architectures}
 \alias{architectures}
 \alias{additive}
+\alias{binary_b}
 \alias{multilinear}
 \title{Genetic architectures}
 \usage{
 additive(loci, traits)
+
+binary_b(loci, traits, init_b = 0.25, init_y = c("normal", "mutations"))
 
 multilinear(loci, traits, epsilon)
 }
@@ -14,6 +17,14 @@ multilinear(loci, traits, epsilon)
 \item{loci}{number of diploid loci.}
 
 \item{traits}{number of traits.}
+
+\item{init_b}{probability that an entry of \code{B} is 1 in a new population
+(0.25 in the C code, which starts from random mutations of an empty \code{B}).}
+
+\item{init_y}{how allelic effects \code{y} of a new population are drawn, with
+the model's \code{init_sd}: \code{"normal"}, \code{Normal(0, init_sd)} for every allele;
+\code{"mutations"}, as in the C code, \verb{2 x loci} mutations of
+\code{Normal(0, init_sd)} added to alleles chosen at random in each genome.}
 
 \item{epsilon}{epistasis tensor, a \verb{traits x traits x traits} array
 (see \code{\link[=random_epsilon]{random_epsilon()}}).}
@@ -31,6 +42,10 @@ effects are zero.
 \details{
 \itemize{
 \item \code{additive()}: \verb{x = sum_l Y_l}.
+\item \code{binary_b()}: the binary ontogenetic matrix model of Melo & Marroig
+(2015). Each allele has a scalar effect \code{y} and a column of a binary
+matrix \code{B} saying which traits it affects; \verb{x = B y}. Use with
+\code{\link[=binary_b_mutation]{binary_b_mutation()}}. Genomes have \code{traits + 1} rows: \code{y}, then \code{B}.
 \item \code{multilinear()}: pairwise multilinear epistasis (Hansen & Wagner 2001),
 \verb{x = S + sum_\{i<j\} eps(Y_i, Y_j)}, with \verb{S = sum_l Y_l} and
 \verb{eps(a, b)[k] = sum_\{l,m\} epsilon[k, l, m] a[l] b[m]}. The same tensor is
@@ -39,5 +54,6 @@ used for every pair of loci and must be symmetric in its last two indices.
 }
 \examples{
 additive(loci = 50, traits = 2)
+binary_b(loci = 50, traits = 4)
 multilinear(loci = 50, traits = 2, epsilon = random_epsilon(2, sd = 0.05))
 }

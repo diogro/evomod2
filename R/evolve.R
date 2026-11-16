@@ -39,8 +39,7 @@ evolve.evomod_model <- function(x, regimes, n, record_every = 1, seed = NULL, ..
   check_count(record_every, "record_every")
   if (!is.null(seed)) set.seed(seed)
   p <- x$traits
-  n_alleles <- 2L * x$loci
-  alleles <- array(stats::rnorm(p * n_alleles * n, 0, x$init_sd), c(p, n_alleles, n))
+  alleles <- init_genomes(x$architecture, n, x$init_sd)
   pop <- structure(list(model = x, n = as.integer(n), alleles = alleles,
                         x = NULL, z = NULL, generation = 0L, theta = rep(0, p),
                         record_every = as.integer(record_every),
@@ -63,7 +62,7 @@ run_regimes <- function(pop, regimes, record_start) {
   model <- pop$model
   resolved <- resolve_regimes(regimes, model$traits, pop$theta)
   z <- if (is.null(pop$z)) matrix(0, 0, 0) else pop$z
-  out <- evolve_cpp(pop$alleles, z, model$architecture, model$mutation, model$env_sd,
+  out <- evolve_cpp(pop$alleles, model$traits, z, model$architecture, model$mutation, model$env_sd,
                     resolved, pop$generation, pop$record_every, record_start)
   pop$alleles <- out$alleles
   pop$x <- out$x

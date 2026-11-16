@@ -17,15 +17,17 @@ local_effects(x, alleles = genomes(x)[, , individual], individual = 1)
 
 \item{x}{an architecture, model or population.}
 
-\item{alleles}{a genome (traits x alleles) or an array of genomes
-(traits x alleles x individuals).}
+\item{alleles}{a genome (rows x alleles) or an array of genomes
+(rows x alleles x individuals), see \code{genomes()}.}
 
 \item{individual}{index of an individual of \code{pop}.}
 }
 \description{
 \itemize{
-\item \code{genomes()}: allelic effects of the current population, an array
-\verb{traits x alleles x individuals} (alleles \verb{2l - 1} and \verb{2l} are locus \code{l}).
+\item \code{genomes()}: genomes of the current population, an array
+\verb{rows x alleles x individuals} (alleles \verb{2l - 1} and \verb{2l} are locus \code{l}).
+Rows are the allelic effect vector (one per trait), or, for \code{\link[=binary_b]{binary_b()}},
+\code{y} followed by the column of \code{B}.
 \item \code{genotypic_values()}: genotypic values of genomes under an architecture
 (traits x individuals).
 \item \code{local_effects()}: effect of each locus of one genome in the background of

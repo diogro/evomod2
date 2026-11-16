@@ -6,3 +6,4 @@ src/*.so
 src/*.dll
 *.tar.gz
 evomod2.Rcheck/
+evomod2.code-workspace

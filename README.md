@@ -5,8 +5,8 @@
 <!-- badges: end -->
 
 Individual-based simulations of the evolution of genetic architecture in
-multivariate quantitative traits, with additive or multilinear epistatic
-genotype-phenotype maps. The simulation engine is written in C++ (Rcpp +
+multivariate quantitative traits, with additive, multilinear epistatic or
+binary ontogenetic matrix genotype-phenotype maps. The simulation engine is written in C++ (Rcpp +
 RcppArmadillo); everything is driven from R.
 
 evomod2 extends the model of Melo & Marroig (2015, *PNAS*
@@ -61,9 +61,16 @@ pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same populatio
   of a locus, `Y_l`, is the sum of its two alleles. Effects are measured from
   the reference genotype (all effects zero), where new populations start
   unless `init_sd > 0`.
-* **Architectures**: `additive()`, `x = Σ Y_l`; `multilinear()`,
-  `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a `traits × traits ×
-  traits` tensor `ε` shared by all pairs of loci (Hansen & Wagner 2001).
+* **Architectures**:
+  * `additive()`: `x = Σ Y_l`.
+  * `multilinear()`: `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a
+    `traits × traits × traits` tensor `ε` shared by all pairs of loci
+    (Hansen & Wagner 2001).
+  * `binary_b()`: the model of Melo & Marroig (2015). Each allele has a
+    scalar effect `y` and a column of a binary matrix `B` saying which traits
+    it affects, `x = B y`. Used with `binary_b_mutation()`, which mutates `y`
+    and the entries of `B` separately.
+
   `local_effects()` gives each locus's effect in the background of the rest
   of the genome.
 * **Phenotypes**: `z = x + e`, `e ~ N(0, env_sd²)`.
@@ -82,8 +89,8 @@ The engine is a set of C++ components declared in `src/evomod.h`:
 
 | Interface | Role | Implementations |
 |---|---|---|
-| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear` |
-| `Mutation` | changes allelic effects | `GaussianMutation` |
+| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `BinaryB` |
+| `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation` |
 | `Fitness` | phenotypes → log fitness | `GaussianFitness` |
 
 To add, for example, a new architecture:
@@ -93,20 +100,31 @@ To add, for example, a new architecture:
 2. Add a case to `make_architecture()` that builds it from the list the R
    constructor returns.
 3. Write the R constructor in `R/architecture.R`, returning
-   `structure(list(type = "<name>", loci, traits, ...), class = "evomod_architecture")`.
+   `structure(list(type = "<name>", loci, traits, state_rows, mutation_type, ...), class = "evomod_architecture")`.
+   `state_rows` is the number of rows of a genome (one column per allele):
+   `traits` for an effect vector per allele, `traits + 1` for `binary_b()`.
+   `mutation_type` is the mutation model the architecture works with; if the
+   genome needs a special starting state, add it to `init_genomes()`.
 4. Add tests in `tests/testthat/` (compare with an explicit, slow R version of
    the same map), and, for new models, prototype and cross-check against
    EvoMod.jl.
 
 ## Validation
 
-`validation/cross_check.R` runs the same additive and multilinear simulations
-in evomod2 and EvoMod.jl and compares replicate means of G matrices and trait
-means:
+The scripts in `validation/` run matching simulations in evomod2 and in an
+independent implementation, and compare replicate means of G matrices and
+trait means:
 
 ```sh
+# additive and multilinear models against EvoMod.jl
 Rscript validation/cross_check.R path/to/evomod_julia 20
+# binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)
+Rscript validation/cross_check_c.R path/to/evomod/c-gsl 100 8
 ```
+
+The C code moves the optimum after each generation and skips the first
+directional step, so under directional selection its trait means lag evomod2's
+by about two generations of optimum movement.
 
 ## References
 

@@ -2,25 +2,43 @@
 % Please edit documentation in R/model.R
 \name{mutation}
 \alias{mutation}
-\title{Gaussian mutation}
+\alias{binary_b_mutation}
+\title{Mutation models}
 \usage{
 mutation(rate, cov)
+
+binary_b_mutation(rate, sd, rate_b, b_mutation = c("random", "flip"))
 }
 \arguments{
 \item{rate}{mutation probability per allele per generation.}
 
 \item{cov}{mutational covariance matrix (traits x traits), or a single
 number \code{s}, meaning \code{s^2} times the identity.}
+
+\item{sd}{standard deviation of mutations in \code{y}.}
+
+\item{rate_b}{mutation probability per entry of \code{B} per generation.}
+
+\item{b_mutation}{\code{"random"} or \code{"flip"}, see above.}
 }
 \value{
 An \code{evomod_mutation} object.
 }
 \description{
-Each allele mutates with probability \code{rate} per generation; a mutation adds
-a draw from a multivariate normal with mean zero and covariance \code{cov} to the
+\itemize{
+\item \code{mutation()}: for \code{\link[=additive]{additive()}} and \code{\link[=multilinear]{multilinear()}} architectures. Each
+allele mutates with probability \code{rate} per generation; a mutation adds a
+draw from a multivariate normal with mean zero and covariance \code{cov} to the
 allele's effect vector.
+\item \code{binary_b_mutation()}: for \code{\link[=binary_b]{binary_b()}}. Each allele's effect \code{y}
+mutates with probability \code{rate}, adding \code{Normal(0, sd)}; each entry of \code{B}
+mutates with probability \code{rate_b}. With \code{b_mutation = "random"} (the C
+code) a mutated entry gets a random value, 0 or 1, so it changes half of
+the time; with \code{"flip"} it always changes.
+}
 }
 \examples{
 mutation(rate = 0.005, cov = 0.05)
+binary_b_mutation(rate = 0.0005, sd = 0.2, rate_b = 0.0001)
 mutation(rate = 0.005, cov = matrix(c(1, 0.5, 0.5, 1), 2) * 0.01)
 }

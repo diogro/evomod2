@@ -56,6 +56,22 @@ arma::mat Multilinear::local_effects(const arma::mat& alleles) const {
   return L;
 }
 
+// ---- BinaryB -----------------------------------------------------------------
+
+arma::vec BinaryB::genotypic_value(const arma::mat& alleles) const {
+  arma::uword p = alleles.n_rows - 1;
+  return alleles.rows(1, p) * alleles.row(0).t();
+}
+
+arma::mat BinaryB::local_effects(const arma::mat& alleles) const {
+  arma::uword p = alleles.n_rows - 1, loci = alleles.n_cols / 2;
+  arma::mat L(p, loci);
+  for (arma::uword l = 0; l < loci; ++l)
+    L.col(l) = alleles(arma::span(1, p), 2 * l) * alleles(0, 2 * l) +
+               alleles(arma::span(1, p), 2 * l + 1) * alleles(0, 2 * l + 1);
+  return L;
+}
+
 // ---- Mutation ---------------------------------------------------------------
 
 GaussianMutation::GaussianMutation(double rate, const arma::mat& cov) : rate_(rate) {
@@ -70,6 +86,22 @@ void GaussianMutation::mutate(arma::mat& alleles) const {
     arma::uword a = static_cast<arma::uword>(R::unif_rand() * n_alleles);
     if (a == n_alleles) a = n_alleles - 1;
     alleles.col(a) += chol_lower_ * rnorm_vec(alleles.n_rows);
+  }
+}
+
+void BinaryBMutation::mutate(arma::mat& alleles) const {
+  arma::uword n_alleles = alleles.n_cols, p = alleles.n_rows - 1;
+  int n_y = static_cast<int>(R::rbinom(static_cast<double>(n_alleles), rate_y_));
+  for (int i = 0; i < n_y; ++i) {
+    arma::uword a = std::min(static_cast<arma::uword>(R::unif_rand() * n_alleles), n_alleles - 1);
+    alleles(0, a) += sd_y_ * R::norm_rand();
+  }
+  arma::uword n_entries = n_alleles * p;
+  int n_b = static_cast<int>(R::rbinom(static_cast<double>(n_entries), rate_b_));
+  for (int i = 0; i < n_b; ++i) {
+    arma::uword pos = std::min(static_cast<arma::uword>(R::unif_rand() * n_entries), n_entries - 1);
+    arma::uword a = pos / p, k = 1 + pos % p;
+    if (!random_state_ || R::unif_rand() < 0.5) alleles(k, a) = 1.0 - alleles(k, a);
   }
 }
 
@@ -91,6 +123,7 @@ arma::vec GaussianFitness::log_fitness(const arma::mat& z) const {
 std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec) {
   std::string type = Rcpp::as<std::string>(spec["type"]);
   if (type == "additive") return std::unique_ptr<Architecture>(new Additive());
+  if (type == "binary_b") return std::unique_ptr<Architecture>(new BinaryB());
   if (type == "multilinear") {
     arma::cube epsilon = Rcpp::as<arma::cube>(spec["epsilon_slices"]);
     return std::unique_ptr<Architecture>(new Multilinear(epsilon));
@@ -103,6 +136,10 @@ std::unique_ptr<Mutation> make_mutation(const Rcpp::List& spec) {
   if (type == "gaussian")
     return std::unique_ptr<Mutation>(new GaussianMutation(
       Rcpp::as<double>(spec["rate"]), Rcpp::as<arma::mat>(spec["cov"])));
+  if (type == "binary_b")
+    return std::unique_ptr<Mutation>(new BinaryBMutation(
+      Rcpp::as<double>(spec["rate"]), Rcpp::as<double>(spec["sd"]),
+      Rcpp::as<double>(spec["rate_b"]), Rcpp::as<bool>(spec["random_state"])));
   Rcpp::stop("unknown mutation type: " + type);
 }
 

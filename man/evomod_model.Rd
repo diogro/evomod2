@@ -9,12 +9,13 @@ evomod_model(architecture, mutation, env_sd = 0, init_sd = 0)
 \arguments{
 \item{architecture}{an architecture, see \link{architectures}.}
 
-\item{mutation}{a mutation model, see \code{\link[=mutation]{mutation()}}.}
+\item{mutation}{a mutation model matching the architecture, see \code{\link[=mutation]{mutation()}}.}
 
 \item{env_sd}{standard deviation of environmental effects (\code{z = x + e}).}
 
-\item{init_sd}{standard deviation of allelic effects in a new population;
-0 (the default) starts every individual at the reference genotype.}
+\item{init_sd}{standard deviation of allelic effects in a new population
+(\code{y} for \code{\link[=binary_b]{binary_b()}}); 0 (the default) starts every individual at the
+reference genotype.}
 }
 \value{
 An \code{evomod_model} object.

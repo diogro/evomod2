@@ -60,20 +60,20 @@ void phenotypes(const Architecture& arch, double env_sd, const arma::cube& allel
 
 // Run a population through a sequence of regimes.
 //
-// alleles: traits x alleles x individuals. z: current phenotypes (traits x
-// individuals), or a 0 x 0 matrix to draw them. Each regime is a list with
+// alleles: genome rows x alleles x individuals. traits: number of traits.
+// z: current phenotypes (traits x individuals), or a 0 x 0 matrix to draw them. Each regime is a list with
 // generations, selective (bool), theta (optimum at the start), delta_theta
 // (added to theta before selection in every generation) and omega.
 // Moments are recorded after every generation that is a multiple of
 // record_every, and for the starting state if record_start is true.
 // [[Rcpp::export]]
-Rcpp::List evolve_cpp(arma::cube alleles, arma::mat z, Rcpp::List architecture,
+Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture,
                       Rcpp::List mutation, double env_sd, Rcpp::List regimes,
                       int generation, int record_every, bool record_start) {
   std::unique_ptr<Architecture> arch = make_architecture(architecture);
   std::unique_ptr<Mutation> mut = make_mutation(mutation);
 
-  arma::uword p = alleles.n_rows, n_alleles = alleles.n_cols, n = alleles.n_slices;
+  arma::uword p = traits, n_alleles = alleles.n_cols, n = alleles.n_slices;
   arma::uword loci = n_alleles / 2;
   arma::mat X(p, n), Z(p, n);
   for (arma::uword i = 0; i < n; ++i) X.col(i) = arch->genotypic_value(alleles.slice(i));
@@ -88,7 +88,7 @@ Rcpp::List evolve_cpp(arma::cube alleles, arma::mat z, Rcpp::List architecture,
   arma::vec theta = Rcpp::as<arma::vec>(Rcpp::as<Rcpp::List>(regimes[0])["theta"]);
   if (record_start) rec.add(generation, theta, X, Z);
 
-  arma::cube offspring(p, n_alleles, n);
+  arma::cube offspring(alleles.n_rows, n_alleles, n);
   arma::vec w(n);
 
   for (R_xlen_t r = 0; r < regimes.size(); ++r) {
@@ -108,10 +108,7 @@ Rcpp::List evolve_cpp(arma::cube alleles, arma::mat z, Rcpp::List architecture,
       } else {
         w.ones();
       }
-      for (arma::uword i = 0; i < n; ++i) {
-        arma::mat genome(alleles.slice(i).memptr(), p, n_alleles, false, true);
-        mut->mutate(genome);
-      }
+      for (arma::uword i = 0; i < n; ++i) mut->mutate(alleles.slice(i));
       arma::uvec sires = sample_weighted(w, n), dames = sample_weighted(w, n);
       for (arma::uword i = 0; i < n; ++i) {
         const arma::mat& s = alleles.slice(sires[i]);
@@ -136,9 +133,9 @@ Rcpp::List evolve_cpp(arma::cube alleles, arma::mat z, Rcpp::List architecture,
 }
 
 // [[Rcpp::export]]
-arma::mat genotypic_values_cpp(arma::cube alleles, Rcpp::List architecture) {
+arma::mat genotypic_values_cpp(arma::cube alleles, int traits, Rcpp::List architecture) {
   std::unique_ptr<Architecture> arch = make_architecture(architecture);
-  arma::mat X(alleles.n_rows, alleles.n_slices);
+  arma::mat X(traits, alleles.n_slices);
   for (arma::uword i = 0; i < alleles.n_slices; ++i)
     X.col(i) = arch->genotypic_value(alleles.slice(i));
   return X;

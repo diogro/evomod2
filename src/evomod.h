@@ -10,8 +10,11 @@
 // functions, and add a case to the matching make_*() factory (components.cpp)
 // so it can be built from the list that the R constructor returns.
 //
-// Genomes are stored as matrices of allelic effect vectors: traits x alleles,
-// with alleles 2l and 2l + 1 (0-based) belonging to locus l.
+// Genomes are matrices with one column per allele (alleles 2l and 2l + 1,
+// 0-based, belong to locus l). The rows hold the allele's state, as defined
+// by the architecture: an effect vector (one row per trait) for Additive and
+// Multilinear; the scalar effect y followed by the column of the binary
+// matrix B for BinaryB.
 
 #ifndef EVOMOD2_H
 #define EVOMOD2_H
@@ -58,6 +61,14 @@ private:
   arma::vec bilinear(const arma::vec& a, const arma::vec& b) const;
 };
 
+// Binary ontogenetic matrix (Melo & Marroig 2015): row 0 holds the allelic
+// effects y, rows 1..p the binary matrix B (traits x alleles); x = B y.
+class BinaryB : public Architecture {
+public:
+  arma::vec genotypic_value(const arma::mat& alleles) const override;
+  arma::mat local_effects(const arma::mat& alleles) const override;
+};
+
 // ---- Mutation -------------------------------------------------------------
 
 class Mutation {
@@ -76,6 +87,20 @@ public:
 private:
   double rate_;
   arma::mat chol_lower_;  // cov = L L'
+};
+
+// Mutation for BinaryB genomes. Each allele's y mutates with probability
+// rate_y, adding Normal(0, sd_y); each entry of B mutates with probability
+// rate_b. With random_state, a mutated entry gets a random value (0 or 1, so
+// it changes half of the time, as in the C code); otherwise it flips.
+class BinaryBMutation : public Mutation {
+public:
+  BinaryBMutation(double rate_y, double sd_y, double rate_b, bool random_state)
+    : rate_y_(rate_y), sd_y_(sd_y), rate_b_(rate_b), random_state_(random_state) {}
+  void mutate(arma::mat& alleles) const override;
+private:
+  double rate_y_, sd_y_, rate_b_;
+  bool random_state_;
 };
 
 // ---- Fitness --------------------------------------------------------------
