@@ -91,8 +91,9 @@ private:
 
 // Mutation for BinaryB genomes. Each allele's y mutates with probability
 // rate_y, adding Normal(0, sd_y); each entry of B mutates with probability
-// rate_b. With random_state, a mutated entry gets a random value (0 or 1, so
-// it changes half of the time, as in the C code); otherwise it flips.
+// rate_b. A mutated entry flips; with random_state it gets a random value
+// instead (0 or 1, so it changes half of the time, as in the C code used for
+// the published simulations).
 class BinaryBMutation : public Mutation {
 public:
   BinaryBMutation(double rate_y, double sd_y, double rate_b, bool random_state)

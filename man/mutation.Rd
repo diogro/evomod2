@@ -7,7 +7,7 @@
 \usage{
 mutation(rate, cov)
 
-binary_b_mutation(rate, sd, rate_b, b_mutation = c("random", "flip"))
+binary_b_mutation(rate, sd, rate_b, b_mutation = c("flip", "random"))
 }
 \arguments{
 \item{rate}{mutation probability per allele per generation.}
@@ -32,9 +32,10 @@ draw from a multivariate normal with mean zero and covariance \code{cov} to the
 allele's effect vector.
 \item \code{binary_b_mutation()}: for \code{\link[=binary_b]{binary_b()}}. Each allele's effect \code{y}
 mutates with probability \code{rate}, adding \code{Normal(0, sd)}; each entry of \code{B}
-mutates with probability \code{rate_b}. With \code{b_mutation = "random"} (the C
-code) a mutated entry gets a random value, 0 or 1, so it changes half of
-the time; with \code{"flip"} it always changes.
+mutates with probability \code{rate_b}. With \code{b_mutation = "flip"} (the
+default, and the current C code) a mutated entry always changes; with
+\code{"random"} it gets a random value, 0 or 1, so it changes half of the time,
+as in the C code used for the simulations of Melo & Marroig (2015).
 }
 }
 \examples{

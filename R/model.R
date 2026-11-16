@@ -6,9 +6,10 @@
 #'   allele's effect vector.
 #' * `binary_b_mutation()`: for [binary_b()]. Each allele's effect `y`
 #'   mutates with probability `rate`, adding `Normal(0, sd)`; each entry of `B`
-#'   mutates with probability `rate_b`. With `b_mutation = "random"` (the C
-#'   code) a mutated entry gets a random value, 0 or 1, so it changes half of
-#'   the time; with `"flip"` it always changes.
+#'   mutates with probability `rate_b`. With `b_mutation = "flip"` (the
+#'   default, and the current C code) a mutated entry always changes; with
+#'   `"random"` it gets a random value, 0 or 1, so it changes half of the time,
+#'   as in the C code used for the simulations of Melo & Marroig (2015).
 #'
 #' @param rate mutation probability per allele per generation.
 #' @param cov mutational covariance matrix (traits x traits), or a single
@@ -30,7 +31,7 @@ mutation <- function(rate, cov) {
 
 #' @rdname mutation
 #' @export
-binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("random", "flip")) {
+binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")) {
   b_mutation <- match.arg(b_mutation)
   for (r in list(rate, rate_b))
     if (!is.numeric(r) || length(r) != 1 || r < 0 || r > 1)

@@ -69,7 +69,9 @@ pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same populatio
   * `binary_b()`: the model of Melo & Marroig (2015). Each allele has a
     scalar effect `y` and a column of a binary matrix `B` saying which traits
     it affects, `x = B y`. Used with `binary_b_mutation()`, which mutates `y`
-    and the entries of `B` separately.
+    and the entries of `B` separately (`b_mutation = "random"` reproduces the
+    B mutation of the published simulations, which changed entries at half
+    the nominal rate).
 
   `local_effects()` gives each locus's effect in the background of the rest
   of the genome.

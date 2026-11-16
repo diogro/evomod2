@@ -6,7 +6,9 @@
 # number generators, so results agree in distribution, not exactly.
 #
 # Usage: Rscript validation/cross_check_c.R <path to evomod/c-gsl> [reps] [cores]
-# Needs GSL (gsl-config) and a C compiler to build the C code.
+# Needs GSL (gsl-config) and a C compiler to build the C code. The C code
+# flips mutated B entries since November 2026 (evomod 77ace1c); for older
+# versions use b_mutation = "random" below.
 
 args <- commandArgs(trailingOnly = TRUE)
 c_dir <- normalizePath(args[1])
@@ -62,7 +64,7 @@ summarise <- function(x) {
 
 # ---- evomod2 runs -------------------------------------------------------------
 model <- evomod_model(binary_b(LOCI, TRAITS, init_b = 0.25, init_y = "mutations"),
-                      binary_b_mutation(MU, SIGMA, MU_B, b_mutation = "random"),
+                      binary_b_mutation(MU, SIGMA, MU_B, b_mutation = "flip"),
                       env_sd = V_E, init_sd = SIGMA)
 run_r <- function(rep) {
   pop <- evolve(model, n = N, record_every = 1000, seed = rep,
