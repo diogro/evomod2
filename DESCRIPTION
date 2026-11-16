@@ -1,0 +1,27 @@
+Package: evomod2
+Title: Individual-Based Simulations of the Evolution of Genetic Architecture
+Version: 0.1.0
+Authors@R:
+    person("Diogo", "Melo", role = c("aut", "cre"), email = "diogro@gmail.com")
+Description: Individual-based simulations of multivariate quantitative traits
+    under drift, stabilizing and directional selection, with additive or
+    multilinear epistatic genetic architectures (Hansen and Wagner 2001
+    <doi:10.1006/tpbi.2001.1520>). Extends the model of Melo and Marroig (2015)
+    <doi:10.1073/pnas.1322632112>. The simulation engine is written in C++.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    Rcpp,
+    graphics,
+    grDevices,
+    stats
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/diogro/evomod2
+BugReports: https://github.com/diogro/evomod2/issues
+Config/roxygen2/version: 8.1.1
