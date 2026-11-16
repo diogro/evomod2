@@ -163,23 +163,24 @@ free <- evomod_model(additive(50, 4), mutation(rate = 0.001, cov = 0.2),
                      env_sd = 0.8, init_sd = 0.2)
 stab <- stabilizing(1500, omega = 5)
 decomp <- sapply(list(free = free, linked = linked), function(m) {
-  d <- g_decomposition(evolve(m, stab, n = 500, seed = 3))
+  d <- g_decomposition(evolve(m, stab, n = 500, record_every = 500, seed = 3))
   c(G = d$G[1, 1], genic = d$genic[1, 1], ld = d$ld[1, 1])
 })
 round(decomp, 3)
 ```
 
 `g_matrices(pop, "genic")` and `g_matrices(pop, "ld")` give the two parts at
-every recorded generation. For architectures where genotypic values are not sums of
-allele effects (multilinear epistasis), the same split can be estimated by
-shuffling alleles among individuals at each locus (do O & Whitlock 2023):
+every recorded generation. `inst/examples/corridor_linkage.R` compares the
+binary B and additive architectures under free recombination and tight
+linkage.
+
+For architectures where genotypic values are not sums of allele effects
+(multilinear epistasis), the same split can be estimated by shuffling alleles
+among individuals at each locus (do O & Whitlock 2023). Here for the
+population with positive epistasis from the previous section:
 
 ```{r}
-m <- evomod_model(multilinear(50, 2, self_epistasis(0.05)),
-                  mutation(rate = 0.005, cov = 0.05), env_sd = 1,
-                  recombination = genetic_map(1, 0.5))
-pop_ml <- evolve(m, selection, n = 500, seed = 4)
-lapply(g_decomposition(pop_ml, method = "shuffle", shuffles = 10), round, 3)
+lapply(g_decomposition(pop, method = "shuffle", shuffles = 10), round, 3)
 ```
 
 ## Mutational covariance
@@ -189,15 +190,15 @@ is epistasis. `mutational_covariance()` applies single mutations to genomes of
 the population and measures their effects. In the additive model the
 covariance of the effects of one mutation is the mutational covariance of the
 model (`0.05^2` here); with positive directional epistasis, after the
-population moved in the positive direction of trait 1, mutations at trait 1
-have larger effects, and on average positive ones:
+population moved in the positive direction of trait 1, a mutation of size
+`d` at trait 1 changes the trait by `d (1 + ε (S - Y_l))`, so mutational
+effects are larger (their mean stays zero, because the map is linear in each
+locus):
 
 ```{r}
 add <- evomod_model(additive(50, 2), mutation(rate = 0.005, cov = 0.05), env_sd = 1)
-pop_add <- evolve(add, selection, n = 500, seed = 4)
+pop_add <- evolve(add, selection, n = 500, record_every = 500, seed = 2)
 mc <- list(additive = mutational_covariance(pop_add, n = 20000),
-           epistatic = mutational_covariance(pop_ml, n = 20000))
-sapply(mc, function(x) c(var_trait1 = x$per_mutation[1, 1], mean_trait1 = x$mean[[1]]))
-``` `inst/examples/corridor_linkage.R` compares the
-binary B and additive architectures under free recombination and tight
-linkage.
+           epistatic = mutational_covariance(pop, n = 20000))
+signif(sapply(mc, function(x) c(var_trait1 = x$per_mutation[1, 1], mean_trait1 = x$mean[[1]])), 2)
+```

@@ -25,25 +25,23 @@ arma::uvec sample_weighted(const arma::vec& w, arma::uword n) {
 // scaled by n / (n - 1) like arma::cov. Empty if the architecture is not a
 // sum of allele effects.
 arma::mat genic_covariance(const Architecture& arch, const arma::cube& alleles) {
-  arma::uword n = alleles.n_slices, loci = alleles.n_cols / 2;
+  arma::uword n = alleles.n_slices, n_alleles = alleles.n_cols, loci = n_alleles / 2;
   arma::mat E0 = arch.allele_effects(alleles.slice(0));
   if (E0.n_elem == 0) return arma::mat();
   arma::uword p = E0.n_rows;
-  arma::mat sums(p, loci, arma::fill::zeros);
-  arma::cube cross(p, p, loci, arma::fill::zeros);
-  for (arma::uword i = 0; i < n; ++i) {
-    arma::mat E = i == 0 ? E0 : arch.allele_effects(alleles.slice(i));
-    for (arma::uword l = 0; l < loci; ++l) {
-      arma::mat a = E.cols(2 * l, 2 * l + 1);
-      sums.col(l) += arma::sum(a, 1);
-      cross.slice(l) += a * a.t();
-    }
-  }
+  // allele effects of every individual, traits x alleles x individuals
+  arma::cube E(p, n_alleles, n);
+  E.slice(0) = E0;
+  for (arma::uword i = 1; i < n; ++i) E.slice(i) = arch.allele_effects(alleles.slice(i));
   arma::mat genic(p, p, arma::fill::zeros);
-  double m = 2.0 * n;
+  arma::mat A(p, 2 * n);  // both allele copies of one locus, pooled over individuals
   for (arma::uword l = 0; l < loci; ++l) {
-    arma::vec mu = sums.col(l) / m;
-    genic += 2.0 * (cross.slice(l) / m - mu * mu.t());
+    for (arma::uword i = 0; i < n; ++i) {
+      A.col(2 * i) = E.slice(i).col(2 * l);
+      A.col(2 * i + 1) = E.slice(i).col(2 * l + 1);
+    }
+    arma::vec mu = arma::mean(A, 1);
+    genic += 2.0 * (A * A.t() / (2.0 * n) - mu * mu.t());
   }
   return genic * (static_cast<double>(n) / (n - 1));
 }
