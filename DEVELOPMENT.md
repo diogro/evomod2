@@ -102,7 +102,7 @@ Rscript -e 'Rcpp::compileAttributes(); roxygen2::roxygenise()'   # after changin
 R CMD INSTALL --preclean .
 Rscript -e 'devtools::test()'
 R CMD build . && R CMD check --no-manual evomod2_*.tar.gz
-Rscript -e 'pkgdown::build_site()'                               # website into docs/
+Rscript pkgdown/build_site.R                                     # website into docs/
 ```
 
 - **Time code only from clean builds.** `devtools::test()` and `load_all()`
@@ -130,6 +130,9 @@ Rscript -e 'pkgdown::build_site()'                               # website into 
 - GitHub Actions runs `R CMD check` on macOS, Ubuntu and Windows for every
   push to `main` and every pull request.
 - The website is built by pkgdown into `docs/` and served by GitHub Pages
-  from `main`; rebuild it (`pkgdown::build_site()`) when documentation or
-  vignettes change. Add new vignettes to `_pkgdown.yml`.
+  from `main`; rebuild it (`Rscript pkgdown/build_site.R`) when the README,
+  documentation or vignettes change. The home page is the README. Add new
+  vignettes to `_pkgdown.yml`. `pkgdown/build_site.R` and
+  `pkgdown/extra.scss` are shared with the sibling packages' sites; keep the
+  copies identical.
 
