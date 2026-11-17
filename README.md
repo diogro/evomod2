@@ -94,7 +94,9 @@ g_matrices(pop, "ld")          # the LD part at every recorded generation
 ```
 
 Pleiotropy shows up in the genic part (one allele affecting several traits),
-while correlations built by selection between loci show up in the LD part.
+while correlations built by selection between loci show up in the LD part
+(see Melo, Marroig & Wolf 2019 for this decomposition of genetic covariance
+and its evolutionary consequences).
 
 For any architecture, including `multilinear()`, the split can be estimated
 by shuffling alleles among individuals at each locus, which removes
@@ -333,10 +335,14 @@ by about two generations of optimum movement.
   Lande, R. (1979). Quantitative genetic analysis of multivariate evolution,
   applied to brain: body size allometry. *Evolution*, 33(1), 402-416.
   [doi:10.2307/2407630](https://doi.org/10.2307/2407630)
-- **Linkage disequilibrium under selection (genic and LD parts of G):**
+- **Pleiotropy and linkage disequilibrium (genic and LD parts of G):**
   Bulmer, M. G. (1971). The effect of selection on genetic variability.
   *The American Naturalist*, 105(943), 201-211.
-  [doi:10.1086/282718](https://doi.org/10.1086/282718)
+  [doi:10.1086/282718](https://doi.org/10.1086/282718);
+  Melo, D., Marroig, G., & Wolf, J. B. (2019). Genomic perspective on
+  multivariate variation, pleiotropy, and evolution. *Journal of Heredity*,
+  110(4), 479-493.
+  [doi:10.1093/jhered/esz011](https://doi.org/10.1093/jhered/esz011)
 - **Evolvability and autonomy:** Hansen, T. F., & Houle, D. (2008). Measuring
   and comparing evolvability and constraint in multivariate characters.
   *Journal of Evolutionary Biology*, 21(5), 1201-1219.

@@ -46,7 +46,14 @@ g_decomposition(pop)
 g_decomposition(pop, method = "shuffle", shuffles = 20)
 }
 \references{
+Melo, D., Marroig, G., & Wolf, J. B. (2019). Genomic perspective
+on multivariate variation, pleiotropy, and evolution. \emph{Journal of
+Heredity}, 110(4), 479-493. \doi{10.1093/jhered/esz011}
+
+Bulmer, M. G. (1971). The effect of selection on genetic variability.
+\emph{The American Naturalist}, 105(943), 201-211. \doi{10.1086/282718}
+
 do O, I., & Whitlock, M. C. (2023). The evolution of genetic
 covariance and modularity as a result of multigenerational environmental
-fluctuation. \emph{Evolution Letters}, 7(6), 457-466.
+fluctuation. \emph{Evolution Letters}, 7(6), 457-466. \doi{10.1093/evlett/qrad048}
 }

@@ -165,9 +165,16 @@ check_genome_rows <- function(alleles, arch) {
 #' @param method `"genic"` or `"shuffle"`, see above.
 #' @param shuffles number of shuffled populations averaged (`method = "shuffle"`).
 #' @return A list with matrices `G`, `genic` and `ld`.
-#' @references do O, I., & Whitlock, M. C. (2023). The evolution of genetic
+#' @references Melo, D., Marroig, G., & Wolf, J. B. (2019). Genomic perspective
+#'   on multivariate variation, pleiotropy, and evolution. *Journal of
+#'   Heredity*, 110(4), 479-493. \doi{10.1093/jhered/esz011}
+#'
+#'   Bulmer, M. G. (1971). The effect of selection on genetic variability.
+#'   *The American Naturalist*, 105(943), 201-211. \doi{10.1086/282718}
+#'
+#'   do O, I., & Whitlock, M. C. (2023). The evolution of genetic
 #'   covariance and modularity as a result of multigenerational environmental
-#'   fluctuation. *Evolution Letters*, 7(6), 457-466.
+#'   fluctuation. *Evolution Letters*, 7(6), 457-466. \doi{10.1093/evlett/qrad048}
 #' @examples
 #' model <- evomod_model(additive(loci = 20, traits = 2),
 #'                       mutation(rate = 0.01, cov = 0.1), init_sd = 0.1)
