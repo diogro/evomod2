@@ -1,0 +1,14 @@
+pandoc: '3.10'
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  architectures: architectures.html
+  evomod2: evomod2.html
+  fluctuating-environments: fluctuating-environments.html
+  jones-burger-arnold-2014: jones-burger-arnold-2014.html
+  melo-marroig-2015: melo-marroig-2015.html
+  mutation-models: mutation-models.html
+last_built: 2026-11-17T00:51Z
+urls:
+  reference: https://diogro.github.io/evomod2/reference
+  article: https://diogro.github.io/evomod2/articles

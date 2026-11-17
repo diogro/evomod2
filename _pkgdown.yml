@@ -18,8 +18,8 @@ articles:
   navbar: Published results
   contents:
   - melo-marroig-2015
-  - fluctuating-environments
   - jones-burger-arnold-2014
+  - fluctuating-environments
 
 reference:
 - title: Models
@@ -28,6 +28,7 @@ reference:
   - evomod_model
   - architectures
   - random_epsilon
+  - pairwise_epsilon
   - mutation
   - recombination
   - life_cycles
@@ -46,6 +47,7 @@ reference:
   - g_decomposition
   - shuffle_genomes
   - mutational_covariance
+  - additive_covariance
   - avg_corr
   - matrix_statistics
 - title: Package
