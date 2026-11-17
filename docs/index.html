@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Individual-Based Simulations of the Evolution of Genetic Architecture">
-<meta name="description" content="Individual-based simulations of multivariate quantitative traits under drift, stabilizing and directional selection, with additive or multilinear epistatic genetic architectures (Hansen and Wagner 2001 &lt;doi:10.1006/tpbi.2001.1520&gt;). Extends the model of Melo and Marroig (2015) &lt;doi:10.1073/pnas.1322632112&gt;. The simulation engine is written in C++.">
-<meta property="og:description" content="Individual-based simulations of multivariate quantitative traits under drift, stabilizing and directional selection, with additive or multilinear epistatic genetic architectures (Hansen and Wagner 2001 &lt;doi:10.1006/tpbi.2001.1520&gt;). Extends the model of Melo and Marroig (2015) &lt;doi:10.1073/pnas.1322632112&gt;. The simulation engine is written in C++.">
+<meta name="description" content="Individual-based simulations of multivariate quantitative traits under drift, stabilizing and directional selection, with additive or multilinear epistatic genetic architectures (Hansen and Wagner 2001 &lt;doi:10.1006/tpbi.2000.1508&gt;). Extends the model of Melo and Marroig (2015) &lt;doi:10.1073/pnas.1322632112&gt;. The simulation engine is written in C++.">
+<meta property="og:description" content="Individual-based simulations of multivariate quantitative traits under drift, stabilizing and directional selection, with additive or multilinear epistatic genetic architectures (Hansen and Wagner 2001 &lt;doi:10.1006/tpbi.2000.1508&gt;). Extends the model of Melo and Marroig (2015) &lt;doi:10.1073/pnas.1322632112&gt;. The simulation engine is written in C++.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -247,8 +247,59 @@
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Hansen, T. F., &amp; Wagner, G. P. (2001). Modeling genetic architecture: a multilinear theory of gene interaction. <em>Theoretical Population Biology</em>, 59(1), 61-86.</p>
-<p>Melo, D., &amp; Marroig, G. (2015). Directional selection can drive the evolution of modularity in complex traits. <em>PNAS</em>, 112(2), 470-475.</p>
+<div class="section level3">
+<h3 id="models-implemented">Models implemented<a class="anchor" aria-label="anchor" href="#models-implemented"></a>
+</h3>
+<ul>
+<li>
+<strong>Binary B matrix:</strong> Wagner, G. P. (1989). Multivariate mutation-selection balance with constrained pleiotropic effects. <em>Genetics</em>, 122(1), 223-234. <a href="https://doi.org/10.1093/genetics/122.1.223" class="external-link">doi:10.1093/genetics/122.1.223</a>; Melo, D., &amp; Marroig, G. (2015). Directional selection can drive the evolution of modularity in complex traits. <em>PNAS</em>, 112(2), 470-475. <a href="https://doi.org/10.1073/pnas.1322632112" class="external-link">doi:10.1073/pnas.1322632112</a>
+</li>
+<li>
+<strong>Multilinear epistasis:</strong> Hansen, T. F., &amp; Wagner, G. P. (2001). Modeling genetic architecture: a multilinear theory of gene interaction. <em>Theoretical Population Biology</em>, 59(1), 61-86. <a href="https://doi.org/10.1006/tpbi.2000.1508" class="external-link">doi:10.1006/tpbi.2000.1508</a>; Hermisson, J., Hansen, T. F., &amp; Wagner, G. P. (2003). Epistasis in polygenic traits and the evolution of genetic architecture under stabilizing selection. <em>The American Naturalist</em>, 161(5), 708-734. <a href="https://doi.org/10.1086/374204" class="external-link">doi:10.1086/374204</a>
+</li>
+<li>
+<strong>Additive pleiotropic mutation, random epistasis between pairs of loci, and the <code><a href="reference/life_cycles.html">viability_selection()</a></code> life cycle:</strong> Jones, A. G., Arnold, S. J., &amp; Bürger, R. (2003). Stability of the G-matrix in a population experiencing pleiotropic mutation, stabilizing selection, and genetic drift. <em>Evolution</em>, 57(8), 1747-1760. <a href="https://doi.org/10.1554/02-631" class="external-link">doi:10.1554/02-631</a>; Jones, A. G., Arnold, S. J., &amp; Bürger, R. (2004). Evolution and stability of the G-matrix on a landscape with a moving optimum. <em>Evolution</em>, 58(8), 1639-1654. <a href="https://doi.org/10.1554/03-651" class="external-link">doi:10.1554/03-651</a>; Jones, A. G., Bürger, R., &amp; Arnold, S. J. (2014). Epistasis and natural selection shape the mutational architecture of complex traits. <em>Nature Communications</em>, 5, 3709. <a href="https://doi.org/10.1038/ncomms4709" class="external-link">doi:10.1038/ncomms4709</a>
+</li>
+<li>
+<strong>Contribution matrix and fluctuating optima:</strong> do O, I., &amp; Whitlock, M. C. (2023). The evolution of genetic covariance and modularity as a result of multigenerational environmental fluctuation. <em>Evolution Letters</em>, 7(6), 457-466. <a href="https://doi.org/10.1093/evlett/qrad048" class="external-link">doi:10.1093/evlett/qrad048</a>
+</li>
+<li>
+<strong>House of cards mutation:</strong> Kingman, J. F. C. (1978). A simple model for the balance between selection and mutation. <em>Journal of Applied Probability</em>, 15(1), 1-12. <a href="https://doi.org/10.2307/3213231" class="external-link">doi:10.2307/3213231</a>; Turelli, M. (1984). Heritable genetic variation via mutation-selection balance: Lerch’s zeta meets the abdominal bristle. <em>Theoretical Population Biology</em>, 25(2), 138-193. <a href="https://doi.org/10.1016/0040-5809(84)90017-0" class="external-link">doi:10.1016/0040-5809(84)90017-0</a>; Zeng, Z.-B., &amp; Cockerham, C. C. (1993). Mutation models and quantitative genetic variation. <em>Genetics</em>, 133(3), 729-736. <a href="https://doi.org/10.1093/genetics/133.3.729" class="external-link">doi:10.1093/genetics/133.3.729</a>
+</li>
+<li>
+<strong>Genetic map:</strong> Haldane, J. B. S. (1919). The combination of linkage values and the calculation of distances between the loci of linked factors. <em>Journal of Genetics</em>, 8(4), 299-309.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="results-reproduced-in-the-vignettes">Results reproduced in the vignettes<a class="anchor" aria-label="anchor" href="#results-reproduced-in-the-vignettes"></a>
+</h3>
+<ul>
+<li>Melo &amp; Marroig (2015), <code><a href="articles/melo-marroig-2015.html">vignette("melo-marroig-2015")</a></code>
+</li>
+<li>Jones, Bürger &amp; Arnold (2014), <code><a href="articles/jones-burger-arnold-2014.html">vignette("jones-burger-arnold-2014")</a></code>
+</li>
+<li>do O &amp; Whitlock (2023), <code><a href="articles/fluctuating-environments.html">vignette("fluctuating-environments")</a></code>
+</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="theory-and-statistics">Theory and statistics<a class="anchor" aria-label="anchor" href="#theory-and-statistics"></a>
+</h3>
+<ul>
+<li>
+<strong>Response to selection and drift of multivariate traits:</strong> Lande, R. (1976). Natural selection and random genetic drift in phenotypic evolution. <em>Evolution</em>, 30(2), 314-334. <a href="https://doi.org/10.1111/j.1558-5646.1976.tb00911.x" class="external-link">doi:10.1111/j.1558-5646.1976.tb00911.x</a>; Lande, R. (1979). Quantitative genetic analysis of multivariate evolution, applied to brain: body size allometry. <em>Evolution</em>, 33(1), 402-416. <a href="https://doi.org/10.2307/2407630" class="external-link">doi:10.2307/2407630</a>
+</li>
+<li>
+<strong>Linkage disequilibrium under selection (genic and LD parts of G):</strong> Bulmer, M. G. (1971). The effect of selection on genetic variability. <em>The American Naturalist</em>, 105(943), 201-211. <a href="https://doi.org/10.1086/282718" class="external-link">doi:10.1086/282718</a>
+</li>
+<li>
+<strong>Evolvability and autonomy:</strong> Hansen, T. F., &amp; Houle, D. (2008). Measuring and comparing evolvability and constraint in multivariate characters. <em>Journal of Evolutionary Biology</em>, 21(5), 1201-1219. <a href="https://doi.org/10.1111/j.1420-9101.2008.01573.x" class="external-link">doi:10.1111/j.1420-9101.2008.01573.x</a>
+</li>
+<li>
+<strong>Modularity:</strong> Melo, D., Porto, A., Cheverud, J. M., &amp; Marroig, G. (2016). Modularity: genes, development, and evolution. <em>Annual Review of Ecology, Evolution, and Systematics</em>, 47, 463-486. <a href="https://doi.org/10.1146/annurev-ecolsys-121415-032409" class="external-link">doi:10.1146/annurev-ecolsys-121415-032409</a>
+</li>
+</ul>
+</div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

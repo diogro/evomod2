@@ -6,7 +6,7 @@ Authors@R:
 Description: Individual-based simulations of multivariate quantitative traits
     under drift, stabilizing and directional selection, with additive or
     multilinear epistatic genetic architectures (Hansen and Wagner 2001
-    <doi:10.1006/tpbi.2001.1520>). Extends the model of Melo and Marroig (2015)
+    <doi:10.1006/tpbi.2000.1508>). Extends the model of Melo and Marroig (2015)
     <doi:10.1073/pnas.1322632112>. The simulation engine is written in C++.
 License: MIT + file LICENSE
 Encoding: UTF-8

@@ -215,9 +215,77 @@ by about two generations of optimum movement.
 
 ## References
 
-Hansen, T. F., & Wagner, G. P. (2001). Modeling genetic architecture: a
-multilinear theory of gene interaction. *Theoretical Population Biology*,
-59(1), 61-86.
+### Models implemented
 
-Melo, D., & Marroig, G. (2015). Directional selection can drive the evolution
-of modularity in complex traits. *PNAS*, 112(2), 470-475.
+- **Binary B matrix:** Wagner, G. P. (1989). Multivariate mutation-selection
+  balance with constrained pleiotropic effects. *Genetics*, 122(1), 223-234.
+  [doi:10.1093/genetics/122.1.223](https://doi.org/10.1093/genetics/122.1.223);
+  Melo, D., & Marroig, G. (2015). Directional selection can drive the
+  evolution of modularity in complex traits. *PNAS*, 112(2), 470-475.
+  [doi:10.1073/pnas.1322632112](https://doi.org/10.1073/pnas.1322632112)
+- **Multilinear epistasis:** Hansen, T. F., & Wagner, G. P. (2001). Modeling
+  genetic architecture: a multilinear theory of gene interaction. *Theoretical
+  Population Biology*, 59(1), 61-86.
+  [doi:10.1006/tpbi.2000.1508](https://doi.org/10.1006/tpbi.2000.1508);
+  Hermisson, J., Hansen, T. F., & Wagner, G. P. (2003). Epistasis in polygenic
+  traits and the evolution of genetic architecture under stabilizing
+  selection. *The American Naturalist*, 161(5), 708-734.
+  [doi:10.1086/374204](https://doi.org/10.1086/374204)
+- **Additive pleiotropic mutation, random epistasis between pairs of loci, and
+  the `viability_selection()` life cycle:** Jones, A. G., Arnold, S. J., &
+  Bürger, R. (2003). Stability of the G-matrix in a population experiencing
+  pleiotropic mutation, stabilizing selection, and genetic drift. *Evolution*,
+  57(8), 1747-1760. [doi:10.1554/02-631](https://doi.org/10.1554/02-631);
+  Jones, A. G., Arnold, S. J., & Bürger, R. (2004). Evolution and stability of
+  the G-matrix on a landscape with a moving optimum. *Evolution*, 58(8),
+  1639-1654. [doi:10.1554/03-651](https://doi.org/10.1554/03-651);
+  Jones, A. G., Bürger, R., & Arnold, S. J. (2014). Epistasis and natural
+  selection shape the mutational architecture of complex traits. *Nature
+  Communications*, 5, 3709.
+  [doi:10.1038/ncomms4709](https://doi.org/10.1038/ncomms4709)
+- **Contribution matrix and fluctuating optima:** do O, I., & Whitlock, M. C.
+  (2023). The evolution of genetic covariance and modularity as a result of
+  multigenerational environmental fluctuation. *Evolution Letters*, 7(6),
+  457-466. [doi:10.1093/evlett/qrad048](https://doi.org/10.1093/evlett/qrad048)
+- **House of cards mutation:** Kingman, J. F. C. (1978). A simple model for
+  the balance between selection and mutation. *Journal of Applied
+  Probability*, 15(1), 1-12.
+  [doi:10.2307/3213231](https://doi.org/10.2307/3213231);
+  Turelli, M. (1984). Heritable genetic variation via mutation-selection
+  balance: Lerch's zeta meets the abdominal bristle. *Theoretical Population
+  Biology*, 25(2), 138-193.
+  [doi:10.1016/0040-5809(84)90017-0](https://doi.org/10.1016/0040-5809(84)90017-0);
+  Zeng, Z.-B., & Cockerham, C. C. (1993). Mutation models and quantitative
+  genetic variation. *Genetics*, 133(3), 729-736.
+  [doi:10.1093/genetics/133.3.729](https://doi.org/10.1093/genetics/133.3.729)
+- **Genetic map:** Haldane, J. B. S. (1919). The combination of linkage
+  values and the calculation of distances between the loci of linked factors.
+  *Journal of Genetics*, 8(4), 299-309.
+
+### Results reproduced in the vignettes
+
+- Melo & Marroig (2015), `vignette("melo-marroig-2015")`
+- Jones, Bürger & Arnold (2014), `vignette("jones-burger-arnold-2014")`
+- do O & Whitlock (2023), `vignette("fluctuating-environments")`
+
+### Theory and statistics
+
+- **Response to selection and drift of multivariate traits:** Lande, R.
+  (1976). Natural selection and random genetic drift in phenotypic evolution.
+  *Evolution*, 30(2), 314-334.
+  [doi:10.1111/j.1558-5646.1976.tb00911.x](https://doi.org/10.1111/j.1558-5646.1976.tb00911.x);
+  Lande, R. (1979). Quantitative genetic analysis of multivariate evolution,
+  applied to brain: body size allometry. *Evolution*, 33(1), 402-416.
+  [doi:10.2307/2407630](https://doi.org/10.2307/2407630)
+- **Linkage disequilibrium under selection (genic and LD parts of G):**
+  Bulmer, M. G. (1971). The effect of selection on genetic variability.
+  *The American Naturalist*, 105(943), 201-211.
+  [doi:10.1086/282718](https://doi.org/10.1086/282718)
+- **Evolvability and autonomy:** Hansen, T. F., & Houle, D. (2008). Measuring
+  and comparing evolvability and constraint in multivariate characters.
+  *Journal of Evolutionary Biology*, 21(5), 1201-1219.
+  [doi:10.1111/j.1420-9101.2008.01573.x](https://doi.org/10.1111/j.1420-9101.2008.01573.x)
+- **Modularity:** Melo, D., Porto, A., Cheverud, J. M., & Marroig, G. (2016).
+  Modularity: genes, development, and evolution. *Annual Review of Ecology,
+  Evolution, and Systematics*, 47, 463-486.
+  [doi:10.1146/annurev-ecolsys-121415-032409](https://doi.org/10.1146/annurev-ecolsys-121415-032409)
