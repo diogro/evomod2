@@ -294,6 +294,27 @@ knitr::kable(data.frame(keys,
              digits = 3, row.names = FALSE)
 ```
 
+```{r, echo = FALSE, results = "asis", eval = has_results && has_viability}
+v3m <- function(n, r, v) v3[v3$N == n & v3$r_omega == r, v]
+diffs <- abs(merge(t3, v3, by = c("N", "r_omega"))$rM.x - merge(t3, v3, by = c("N", "r_omega"))$rM.y)
+rse <- mean(aggregate(rM ~ N + r_omega, res$table3, function(x) sd(x) / sqrt(length(x)))$rM)
+cat(sprintf("
+The two life cycles give the same results within sampling error: across the
+20 settings of Table 3, the mean mutational correlations differ by %s on
+average, about the standard error of each mean (%s). Their life cycle does
+not explain the remaining differences from the published values (at N =
+2048 and `r_omega = 0.9`, `r_M` is %s with Wright-Fisher and %s with
+viability selection, against 0.177 published; at N = 128 and
+`r_omega = 0.5`, %s and %s against 0.109). Those differences are about as
+large as the variation among the published entries themselves: the same
+setting appears as 0.141 in their Table 2 and 0.147 in Table 3, and at
+N = 128 their `r_M` is 0.109 for `r_omega = 0.5` but 0.029 for the stronger
+`r_omega = 0.75`.
+",
+  f(mean(diffs), 3), f(rse, 3), f(t3m(2048, 0.9, "rM"), 3), f(v3m(2048, 0.9, "rM"), 3),
+  f(t3m(128, 0.5, "rM"), 3), f(v3m(128, 0.5, "rM"), 3)))
+```
+
 ```{r, eval = has_results && has_viability}
 v2 <- avg(res$viability_table2, c("sigma2", "r_omega"))
 keys <- published2[c("sigma2", "r_omega")]
