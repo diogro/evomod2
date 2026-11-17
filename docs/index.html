@@ -265,7 +265,12 @@
 <div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># additive and multilinear models against EvoMod.jl</span></span>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check.R path/to/evomod_julia 20</span>
 <span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)</span></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check_c.R path/to/evomod/c-gsl 100 8</span></code></pre></div>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check_c.R path/to/evomod/c-gsl 100 8</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co"># binary B with Moran, contribution matrix with a fluctuating optimum, pairwise</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co"># epistasis with viability selection, house of cards on a genetic map, against</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co"># EvoMod.Sim (the Julia port of evomod2)</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check_sim.R path/to/evomod_julia 100 8</span></code></pre></div>
+<p>The Julia package EvoMod.jl includes a port of evomod2 (<code>EvoMod.Sim</code>, same function names), so models can be prototyped in Julia and results checked against an independent implementation.</p>
 <p>The C code moves the optimum after each generation and skips the first directional step, so under directional selection its trait means lag evomod2’s by about two generations of optimum movement.</p>
 </div>
 <div class="section level2">

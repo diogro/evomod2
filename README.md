@@ -265,7 +265,15 @@ trait means:
 Rscript validation/cross_check.R path/to/evomod_julia 20
 # binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)
 Rscript validation/cross_check_c.R path/to/evomod/c-gsl 100 8
+# binary B with Moran, contribution matrix with a fluctuating optimum, pairwise
+# epistasis with viability selection, house of cards on a genetic map, against
+# EvoMod.Sim (the Julia port of evomod2)
+Rscript validation/cross_check_sim.R path/to/evomod_julia 100 8
 ```
+
+The Julia package EvoMod.jl includes a port of evomod2 (`EvoMod.Sim`, same
+function names), so models can be prototyped in Julia and results checked
+against an independent implementation.
 
 The C code moves the optimum after each generation and skips the first
 directional step, so under directional selection its trait means lag evomod2's
