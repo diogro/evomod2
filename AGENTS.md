@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI coding agents helping people use or develop **evomod2**, an R
+Guidance for AI coding agents helping people use **evomod2**, an R
 package (C++ core via Rcpp/RcppArmadillo) for individual-based simulations of
 multivariate trait evolution: genetic architectures, mutation, recombination,
 selection regimes and G/M matrix statistics.
@@ -116,56 +116,7 @@ and 10 traits (2 GB of memory).
 Each states the parameters used and where evomod2 differs from the original
 simulations. Point users to them before re-deriving those setups.
 
-## Developing the package
+## Changing the package
 
-### Layout
-
-- `src/evomod.h`: the C++ component interfaces (`Architecture`, `Mutation`,
-  `Fitness`, `Recombination`) and their implementations; `src/components.cpp`
-  builds components from the R lists (`make_*()` factories);
-  `src/simulate.cpp` has the generation loop (`evolve_cpp`) and C++ helpers
-  exported to R.
-- `R/`: constructors (`architecture.R`, `model.R`, `regimes.R`,
-  `recombination.R`), `evolve.R`, accessors and analysis (`accessors.R`,
-  `statistics.R`), `plot.R`.
-- `tests/testthat/`: unit tests; `validation/`: cross-checks against
-  independent implementations (EvoMod.jl, the original C code), not run in CI.
-- `inst/examples/`: command-line experiments; `inst/extdata/`: stored
-  summaries used by the results vignettes; `vignettes/`; `_pkgdown.yml` and
-  `docs/` (the website).
-
-### Adding a component
-
-Follow the README section "Extending evomod2": derive a class in
-`src/evomod.h`, implement it in `src/components.cpp`, add a case to the
-matching `make_*()` factory, write the R constructor returning a list with a
-`type` (architectures also need `loci`, `traits`, `state_rows`,
-`mutation_type`), and test it against an explicit, slow R version of the same
-computation. New models are usually prototyped and cross-checked in EvoMod.jl
-first.
-
-### Build, test, document
-
-```sh
-Rscript -e 'Rcpp::compileAttributes(); roxygen2::roxygenise()'   # after changing exports or docs
-R CMD INSTALL --preclean .
-Rscript -e 'devtools::test()'
-R CMD build . && R CMD check --no-manual evomod2_*.tar.gz
-Rscript -e 'pkgdown::build_site()'                               # website into docs/
-```
-
-- **Time code only from clean builds.** `devtools::test()` and `load_all()`
-  compile without optimisation and leave the objects in `src/`; a later
-  `R CMD INSTALL .` without `--preclean` reuses them and runs about three
-  times slower. Remove `src/*.o` and `src/*.so` after testing.
-- Keep existing behaviour bit-for-bit when adding options with defaults
-  (seeded runs before and after the change must be identical); compilers may
-  fuse multiply-adds, so keep the old arithmetic on the default path.
-- Statistical tests: use enough replicates and tolerances that they do not
-  fail by chance, and prefer exact expectations (identities, analytical
-  equilibria) where they exist.
-- Documentation is roxygen2 (markdown); do not edit `man/` or `NAMESPACE`
-  by hand.
-- Vignettes that run simulations must build in under a minute; heavy results
-  go in `inst/extdata/` with the script that produces them in
-  `inst/examples/`.
+Agents extending or modifying evomod2 itself (new architectures, mutation
+models, regimes, analyses) should read [DEVELOPMENT.md](DEVELOPMENT.md).
