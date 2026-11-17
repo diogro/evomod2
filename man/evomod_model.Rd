@@ -27,8 +27,9 @@ reference genotype.}
 \item{recombination}{how loci are inherited, see \link{recombination}; free
 recombination by default.}
 
-\item{life_cycle}{\code{\link[=wright_fisher]{wright_fisher()}} (discrete generations, the default)
-or \code{\link[=moran]{moran()}} (overlapping generations).}
+\item{life_cycle}{\code{\link[=wright_fisher]{wright_fisher()}} (discrete generations, the default),
+\code{\link[=moran]{moran()}} (overlapping generations) or \code{\link[=viability_selection]{viability_selection()}} (separate
+sexes and viability selection, Jones et al.).}
 }
 \value{
 An \code{evomod_model} object.

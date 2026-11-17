@@ -51,7 +51,7 @@ Read results with `trait_means()`, `variances()`, `g_matrices()`,
 | Architecture | `additive()`, `binary_b()`, `multilinear()` (shared tensor from `random_epsilon()`, or one tensor per pair of loci from `pairwise_epsilon()`), `contribution_matrix()` |
 | Mutation | `mutation()` / `hoc_mutation()` for additive and multilinear; `binary_b_mutation()` for `binary_b()`; `contribution_mutation()` for `contribution_matrix()` (the model checks the match) |
 | Recombination | `free_recombination()`, `genetic_map(chromosomes, length)`, `linkage(rates)` |
-| Life cycle | `wright_fisher()` (discrete generations), `moran()` (overlapping) |
+| Life cycle | `wright_fisher()` (discrete generations), `moran()` (overlapping), `viability_selection()` (sexes, viability selection; Jones et al.) |
 | Regimes | `drift()`, `stabilizing()`, `directional()`, `fluctuating()` |
 
 ### Conventions that are easy to get wrong

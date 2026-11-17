@@ -146,7 +146,9 @@ to get the vignettes.
 * **Life cycle**: discrete generations (`wright_fisher()`, the default) or
   overlapping generations (`moran()`: a generation is `n` birth-death events,
   each replacing a random individual by the offspring of two parents drawn
-  in proportion to fitness); `evomod_model(..., life_cycle = moran())`.
+  in proportion to fitness), or the life cycle of Jones et al.
+  (`viability_selection()`: separate sexes, females mating with several
+  males, viability selection on zygotes); `evomod_model(..., life_cycle = moran())`.
 * **Mutation**: a mutation replaces an allele's effect `e` by
   `persistence * e + draw`; `persistence = 1` (default) is a random walk,
   `0` the house of cards model (`hoc_mutation()`), for every architecture.

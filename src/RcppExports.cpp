@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // evolve_cpp
-Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, Rcpp::List recombination, double env_sd, Rcpp::List regimes, std::string life_cycle, int generation, int record_every, bool record_start);
+Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture, Rcpp::List mutation, Rcpp::List recombination, double env_sd, Rcpp::List regimes, Rcpp::List life_cycle, int generation, int record_every, bool record_start);
 RcppExport SEXP _evomod2_evolve_cpp(SEXP allelesSEXP, SEXP traitsSEXP, SEXP zSEXP, SEXP architectureSEXP, SEXP mutationSEXP, SEXP recombinationSEXP, SEXP env_sdSEXP, SEXP regimesSEXP, SEXP life_cycleSEXP, SEXP generationSEXP, SEXP record_everySEXP, SEXP record_startSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -25,7 +25,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type recombination(recombinationSEXP);
     Rcpp::traits::input_parameter< double >::type env_sd(env_sdSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type regimes(regimesSEXP);
-    Rcpp::traits::input_parameter< std::string >::type life_cycle(life_cycleSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type life_cycle(life_cycleSEXP);
     Rcpp::traits::input_parameter< int >::type generation(generationSEXP);
     Rcpp::traits::input_parameter< int >::type record_every(record_everySEXP);
     Rcpp::traits::input_parameter< bool >::type record_start(record_startSEXP);

@@ -14,9 +14,11 @@
 # in which G, the additive covariance and M are measured (20 times, averaged);
 # 20 runs per setting.
 #
-# Differences: evomod2 has Wright-Fisher reproduction with parents drawn in
-# proportion to fitness, where they had females mating with two males, four
-# offspring each, viability selection and regulation to K; the additive
+# Life cycle: Wright-Fisher by default; with the environment variable
+# EVOMOD2_LIFE_CYCLE=viability, their life cycle (viability_selection():
+# females mating with two males, four offspring each, viability selection and
+# regulation to K), saved as vs_table2_* and vs_table3_* files.
+# Differences: the additive
 # covariance is the least-squares one (additive_covariance()) rather than a
 # half-sib analysis of variance.
 #
@@ -43,6 +45,9 @@ BURN_IN <- 5000
 EXPERIMENT <- 5000
 MEASUREMENTS <- 20         # measurements during the experimental phase
 M_SAMPLES <- 5000          # single mutations per measurement
+VIABILITY <- identical(Sys.getenv("EVOMOD2_LIFE_CYCLE"), "viability")
+LIFE_CYCLE <- if (VIABILITY) viability_selection(mates = 2, offspring_per_mate = 2) else wright_fisher()
+PREFIX <- if (VIABILITY) "vs_" else ""
 
 omega_matrix <- function(r) OMEGA_VAR * matrix(c(1, r, r, 1), 2)
 M_COV <- ALPHA2 * matrix(c(1, R_MU, R_MU, 1), 2)
@@ -62,7 +67,8 @@ initial_genomes <- function(n, loci) {
 run <- function(n, sigma2, omega, loci = LOCI, eps = NULL, seed) {
   set.seed(seed)
   if (is.null(eps)) eps <- pairwise_epsilon(loci, TRAITS, sd = sqrt(sigma2))
-  model <- evomod_model(multilinear(loci, TRAITS, eps), mutation(MU, M_COV), env_sd = ENV_SD)
+  model <- evomod_model(multilinear(loci, TRAITS, eps), mutation(MU, M_COV), env_sd = ENV_SD,
+                        life_cycle = LIFE_CYCLE)
   pop <- evolve(model, stabilizing(BURN_IN, omega = omega), n = n, record_every = BURN_IN,
                 initial = initial_genomes(n, loci))
   stats <- lapply(seq_len(MEASUREMENTS), function(i) {
@@ -88,16 +94,16 @@ seed_of <- function(...) sum(c(...) * c(1e6, 1e4, 1)[seq_along(c(...))])
 
 run_table2 <- function(sigma2, r_omega, rep, outdir) {
   r <- run(N_CORE, sigma2, omega_matrix(r_omega), seed = seed_of(1, round(100 * sigma2) + round(10 * r_omega) * 1000, rep))
-  saveRDS(data.frame(experiment = "table2", N = N_CORE, sigma2 = sigma2, r_omega = r_omega,
-                     replicate = rep, matrix_row(r)),
-          file.path(outdir, sprintf("table2_%g_%g_%02d.rds", sigma2, r_omega, rep)))
+  saveRDS(data.frame(experiment = "table2", life_cycle = LIFE_CYCLE$type, N = N_CORE,
+                     sigma2 = sigma2, r_omega = r_omega, replicate = rep, matrix_row(r)),
+          file.path(outdir, sprintf("%stable2_%g_%g_%02d.rds", PREFIX, sigma2, r_omega, rep)))
 }
 
 run_table3 <- function(n, r_omega, rep, outdir) {
   r <- run(n, 1, omega_matrix(r_omega), seed = seed_of(2, n + round(100 * r_omega), rep))
-  saveRDS(data.frame(experiment = "table3", N = n, sigma2 = 1, r_omega = r_omega,
-                     replicate = rep, matrix_row(r)),
-          file.path(outdir, sprintf("table3_%d_%g_%02d.rds", n, r_omega, rep)))
+  saveRDS(data.frame(experiment = "table3", life_cycle = LIFE_CYCLE$type, N = n, sigma2 = 1,
+                     r_omega = r_omega, replicate = rep, matrix_row(r)),
+          file.path(outdir, sprintf("%stable3_%d_%g_%02d.rds", PREFIX, n, r_omega, rep)))
 }
 
 run_fig2 <- function(rep, outdir) {
@@ -138,7 +144,8 @@ summarise_runs <- function(outdir, file) {
   files <- list.files(outdir, "\\.rds$", full.names = TRUE)
   read <- function(prefix) do.call(rbind, lapply(grep(paste0("/", prefix, "_"), files, value = TRUE), readRDS))
   saveRDS(list(table2 = read("table2"), table3 = read("table3"), fig2 = read("fig2"),
-               fig3 = read("fig3"),
+               fig3 = read("fig3"), viability_table2 = read("vs_table2"),
+               viability_table3 = read("vs_table3"),
                settings = list(traits = TRAITS, loci = LOCI, n = N_CORE, alpha2 = ALPHA2, mu = MU,
                                omega = OMEGA_VAR, env_sd = ENV_SD, burn_in = BURN_IN,
                                experiment = EXPERIMENT,

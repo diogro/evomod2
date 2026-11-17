@@ -4,11 +4,19 @@
 \alias{life_cycles}
 \alias{wright_fisher}
 \alias{moran}
+\alias{viability_selection}
 \title{Life cycles}
 \usage{
 wright_fisher()
 
 moran()
+
+viability_selection(mates = 2, offspring_per_mate = 2)
+}
+\arguments{
+\item{mates}{number of males each female mates with.}
+
+\item{offspring_per_mate}{number of offspring per female and male.}
 }
 \value{
 An \code{evomod_life_cycle} object, for \code{\link[=evomod_model]{evomod_model()}}.
@@ -28,6 +36,18 @@ about twice as strong as with \code{wright_fisher()} at the same \code{n}.
 }
 }
 \details{
+\itemize{
+\item \code{viability_selection()}: the life cycle of Jones, Arnold & Burger
+(2003, 2004, 2014). Half the population is female; each female mates with
+\code{mates} males drawn at random (males can mate many times) and has
+\code{offspring_per_mate} offspring with each. Zygotes mutate, survive with
+probability equal to their fitness (absolute, \code{W(z) <= 1}), and \code{n}
+adults are drawn at random from the survivors (if fewer than \code{n} survive,
+survivors are resampled to keep \code{n}). \code{n} must be even. With the defaults
+(2 mates, 2 offspring each), the effective population size is about \code{n},
+as with \code{wright_fisher()}.
+}
+
 Statistics are recorded, and directional or fluctuating optima move,
 between generations.
 }

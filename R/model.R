@@ -99,8 +99,21 @@ binary_b_mutation <- function(rate, sd, rate_b, b_mutation = c("flip", "random")
 #'   generation is the same as with `wright_fisher()`. Drift per generation is
 #'   about twice as strong as with `wright_fisher()` at the same `n`.
 #'
+#' * `viability_selection()`: the life cycle of Jones, Arnold & Burger
+#'   (2003, 2004, 2014). Half the population is female; each female mates with
+#'   `mates` males drawn at random (males can mate many times) and has
+#'   `offspring_per_mate` offspring with each. Zygotes mutate, survive with
+#'   probability equal to their fitness (absolute, `W(z) <= 1`), and `n`
+#'   adults are drawn at random from the survivors (if fewer than `n` survive,
+#'   survivors are resampled to keep `n`). `n` must be even. With the defaults
+#'   (2 mates, 2 offspring each), the effective population size is about `n`,
+#'   as with `wright_fisher()`.
+#'
 #' Statistics are recorded, and directional or fluctuating optima move,
 #' between generations.
+#'
+#' @param mates number of males each female mates with.
+#' @param offspring_per_mate number of offspring per female and male.
 #'
 #' @return An `evomod_life_cycle` object, for [evomod_model()].
 #' @examples
@@ -116,6 +129,18 @@ wright_fisher <- function() structure(list(type = "wright_fisher"), class = "evo
 #' @export
 moran <- function() structure(list(type = "moran"), class = "evomod_life_cycle")
 
+#' @rdname life_cycles
+#' @export
+viability_selection <- function(mates = 2, offspring_per_mate = 2) {
+  check_count(mates, "mates")
+  check_count(offspring_per_mate, "offspring_per_mate")
+  if (mates * offspring_per_mate < 2)
+    stop("each female needs at least 2 offspring (mates x offspring_per_mate)", call. = FALSE)
+  structure(list(type = "viability_selection", mates = as.integer(mates),
+                 offspring_per_mate = as.integer(offspring_per_mate)),
+            class = "evomod_life_cycle")
+}
+
 #' Simulation model
 #'
 #' Combines a genetic architecture, a mutation model, recombination and
@@ -125,8 +150,9 @@ moran <- function() structure(list(type = "moran"), class = "evomod_life_cycle")
 #' @param mutation a mutation model matching the architecture, see [mutation()].
 #' @param recombination how loci are inherited, see [recombination]; free
 #'   recombination by default.
-#' @param life_cycle [wright_fisher()] (discrete generations, the default)
-#'   or [moran()] (overlapping generations).
+#' @param life_cycle [wright_fisher()] (discrete generations, the default),
+#'   [moran()] (overlapping generations) or [viability_selection()] (separate
+#'   sexes and viability selection, Jones et al.).
 #' @param env_sd standard deviation of environmental effects (`z = x + e`).
 #' @param init_sd standard deviation of allelic effects in a new population
 #'   (`y` for [binary_b()]); 0 (the default) starts every individual at the

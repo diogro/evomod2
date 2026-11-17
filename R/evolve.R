@@ -40,6 +40,8 @@ evolve <- function(x, regimes, ...) UseMethod("evolve")
 evolve.evomod_model <- function(x, regimes, n, record_every = 1, seed = NULL,
                                 initial = NULL, ...) {
   check_count(n, "n")
+  if (!is.null(x$life_cycle) && x$life_cycle$type == "viability_selection" && n %% 2 != 0)
+    stop("viability_selection() needs an even population size (half females)", call. = FALSE)
   check_count(record_every, "record_every")
   if (!is.null(seed)) set.seed(seed)
   p <- x$traits
@@ -92,7 +94,7 @@ run_regimes <- function(pop, regimes, record_start) {
   pop
 }
 
-life_cycle_of <- function(model) if (is.null(model$life_cycle)) "wright_fisher" else model$life_cycle$type
+life_cycle_of <- function(model) if (is.null(model$life_cycle)) wright_fisher() else model$life_cycle
 
 append_records <- function(old, new) {
   new$generation <- as.integer(new$generation)

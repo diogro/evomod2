@@ -178,7 +178,7 @@ void phenotypes(const Architecture& arch, double env_sd, const arma::cube& allel
 // [[Rcpp::export]]
 Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List architecture,
                       Rcpp::List mutation, Rcpp::List recombination, double env_sd,
-                      Rcpp::List regimes, std::string life_cycle,
+                      Rcpp::List regimes, Rcpp::List life_cycle,
                       int generation, int record_every, bool record_start) {
   std::unique_ptr<Architecture> arch = make_architecture(architecture);
   std::unique_ptr<Mutation> mut = make_mutation(mutation);
@@ -207,9 +207,23 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
             mean_fitness(Rcpp::as<bool>(r0["selective"]), Rcpp::as<arma::mat>(r0["omega"])));
   }
 
-  bool moran = life_cycle == "moran";
-  if (!moran && life_cycle != "wright_fisher") Rcpp::stop("unknown life cycle: " + life_cycle);
+  std::string cycle = Rcpp::as<std::string>(life_cycle["type"]);
+  bool moran = cycle == "moran", viability = cycle == "viability_selection";
+  if (!moran && !viability && cycle != "wright_fisher") Rcpp::stop("unknown life cycle: " + cycle);
   arma::cube offspring(moran ? 0 : alleles.n_rows, moran ? 0 : n_alleles, moran ? 0 : n);
+  // viability selection: n / 2 females (the first half of the population) each
+  // mate with `mates` random males and have `per_mate` offspring with each
+  arma::uword mates = 0, per_mate = 0, females = n / 2, zygotes = 0;
+  arma::cube zyg;
+  arma::mat zyg_x, zyg_z;
+  if (viability) {
+    mates = Rcpp::as<arma::uword>(life_cycle["mates"]);
+    per_mate = Rcpp::as<arma::uword>(life_cycle["offspring_per_mate"]);
+    zygotes = females * mates * per_mate;
+    zyg.set_size(alleles.n_rows, n_alleles, zygotes);
+    zyg_x.set_size(p, zygotes);
+    zyg_z.set_size(p, zygotes);
+  }
   arma::mat kid(alleles.n_rows, n_alleles);
   arma::vec w(n);
   Fenwick weights;
@@ -244,7 +258,43 @@ Rcpp::List evolve_cpp(arma::cube alleles, int traits, arma::mat z, Rcpp::List ar
       } else {
         w.ones();
       }
-      if (moran) {
+      if (viability) {
+        // mating, mutation in the zygotes, viability selection with
+        // probability W(z), then regulation: n adults drawn at random from
+        // the survivors (resampling survivors if fewer than n survive)
+        std::vector<arma::uword> survivors;
+        survivors.reserve(zygotes);
+        arma::uword k = 0;
+        for (arma::uword f = 0; f < females; ++f)
+          for (arma::uword m = 0; m < mates; ++m) {
+            arma::uword male = females + std::min(
+              static_cast<arma::uword>(R::unif_rand() * (n - females)), n - females - 1);
+            for (arma::uword o = 0; o < per_mate; ++o, ++k) {
+              recomb->offspring(alleles.slice(male), alleles.slice(f), zyg.slice(k));
+              mut->mutate(zyg.slice(k));
+              zyg_x.col(k) = arch->genotypic_value(zyg.slice(k));
+              zyg_z.col(k) = zyg_x.col(k) + env_sd * rnorm_vec(p);
+              double w = selective ?
+                std::exp(fitness.log_fitness(arma::mat(zyg_z.col(k)))[0]) : 1.0;
+              if (R::unif_rand() < w) survivors.push_back(k);
+            }
+          }
+        arma::uword s = survivors.size();
+        if (s == 0) Rcpp::stop("no zygote survived viability selection");
+        for (arma::uword i = 0; i < n; ++i) {
+          arma::uword pick;
+          if (i < s) {            // partial Fisher-Yates: n distinct survivors when s >= n
+            arma::uword j = i + std::min(static_cast<arma::uword>(R::unif_rand() * (s - i)), s - i - 1);
+            std::swap(survivors[i], survivors[j]);
+            pick = survivors[i];
+          } else {
+            pick = survivors[std::min(static_cast<arma::uword>(R::unif_rand() * s), s - 1)];
+          }
+          alleles.slice(i) = zyg.slice(pick);
+          X.col(i) = zyg_x.col(pick);
+          Z.col(i) = zyg_z.col(pick);
+        }
+      } else if (moran) {
         // n birth-death events: a random individual dies and is replaced by
         // the offspring of two parents drawn in proportion to fitness; the
         // offspring mutates at the per-generation rates

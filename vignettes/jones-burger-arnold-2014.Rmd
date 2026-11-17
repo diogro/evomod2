@@ -66,13 +66,14 @@ frequent alleles of small effect; 5000 generations of burn-in, then 5000 in
 which G, its additive part and M are measured 20 times and averaged; 20 runs
 per setting.
 
-Two things differ from their simulations:
+Two things can differ from their simulations:
 
-* **Reproduction.** evomod2 draws parents in proportion to fitness each
-  generation (Wright-Fisher). In their model each female mated with two males
-  and had four offspring, followed by viability selection and regulation to
-  `K` individuals; offspring numbers vary differently, so the effective
-  population size is not exactly the same.
+* **Reproduction.** By default evomod2 draws parents in proportion to fitness
+  each generation (`wright_fisher()`). Their life cycle, in which each female
+  mates with two males and has four offspring, followed by viability
+  selection and regulation to `K` individuals, is available as
+  `viability_selection()`; the results below use the default, and a later
+  section repeats Tables 2 and 3 with their life cycle.
 * **Additive variance.** They estimated it from a half-sib design; here it is
   the least-squares additive covariance (`additive_covariance()`), the
   variance of the best linear prediction of genotypic values from the loci.
@@ -238,10 +239,7 @@ cat(sprintf("
   `r_omega = 0.9`, M11 falls from %s at N = 128 to %s at N = 2048 (published
   0.43 and 0.10). The mutational correlation at large N is somewhat lower than
   published (%s at N = 2048 against 0.18), and at N = 128 with `r_omega = 0.5`
-  we find none (%s against 0.11). Their mating system (two mates and four
-  offspring per female, then viability selection) gives a different
-  effective population size from evomod2's Wright-Fisher reproduction, which
-  matters most for these population-size effects.
+  we find none (%s against 0.11); see the comparison of life cycles below.
 * **M, G and omega align**: median angles between leading eigenvectors of
   %s degrees (G and omega) and %s degrees (M and omega), with G less elongated
   than omega and M less than G (eigenvalue ratios %s and %s, against 19).
@@ -255,6 +253,56 @@ cat(sprintf("
   f(median(res$fig2$angle_G_omega), 1), f(median(res$fig2$angle_M_omega), 1),
   f(median(res$fig2$G_ratio), 1), f(median(res$fig2$M_ratio), 1),
   f(fit3[["2048"]]$r.squared), f(fit3[["128"]]$r.squared, 3)))
+```
+
+## Their life cycle
+
+```{r, include = FALSE, eval = has_results}
+has_viability <- !is.null(res$viability_table3) && nrow(res$viability_table3) > 0
+```
+
+Tables 2 and 3 repeated with `viability_selection(mates = 2,
+offspring_per_mate = 2)`, their life cycle. Its effective population size is
+about `n`, like Wright-Fisher (each female leaves on average two adult
+offspring with variance 1, each male two with variance 3, and with equal
+numbers of each sex this gives `N_e` close to `n`; the package tests check
+the neutral rate of drift), so the two life cycles should differ only in how
+selection acts: on zygotes before mating here, on parents in Wright-Fisher.
+
+```{r, eval = has_results && has_viability}
+both <- rbind(
+  data.frame(life_cycle = "Wright-Fisher", res$table3[c("N", "r_omega", "M11", "rM", "VA11")]),
+  data.frame(life_cycle = "Viability selection", res$viability_table3[c("N", "r_omega", "M11", "rM", "VA11")]))
+pub <- data.frame(life_cycle = "Published", N = published3$N, r_omega = published3$r_omega,
+                  M11 = published3$M11, rM = published3$rM, VA11 = NA)
+long <- rbind(aggregate(cbind(M11, rM) ~ life_cycle + N + r_omega, both, mean),
+              pub[!is.na(pub$rM), c("life_cycle", "N", "r_omega", "M11", "rM")])
+long$r_omega <- factor(long$r_omega)
+ggplot(long[long$r_omega %in% c("0.75", "0.9"), ], aes(N, rM, colour = life_cycle)) +
+  geom_point() + geom_line() +
+  scale_x_log10(breaks = c(128, 256, 512, 1024, 2048)) +
+  facet_wrap(~ r_omega, labeller = label_both) +
+  labs(x = "Population size", y = "Mutational correlation (r_M)", colour = NULL) +
+  theme(legend.position = "bottom")
+v3 <- avg(res$viability_table3, c("N", "r_omega"))
+keys <- published3[c("N", "r_omega")]
+knitr::kable(data.frame(keys,
+                        rM = published3$rM, rM_wright_fisher = lookup(keys, t3, "rM"),
+                        rM_viability = lookup(keys, v3, "rM"),
+                        M11 = published3$M11, M11_wright_fisher = lookup(keys, t3, "M11"),
+                        M11_viability = lookup(keys, v3, "M11")),
+             digits = 3, row.names = FALSE)
+```
+
+```{r, eval = has_results && has_viability}
+v2 <- avg(res$viability_table2, c("sigma2", "r_omega"))
+keys <- published2[c("sigma2", "r_omega")]
+knitr::kable(data.frame(keys,
+                        rM = published2$rM, rM_wright_fisher = lookup(keys, t2, "rM"),
+                        rM_viability = lookup(keys, v2, "rM"),
+                        M11 = published2$M11, M11_wright_fisher = lookup(keys, t2, "M11"),
+                        M11_viability = lookup(keys, v2, "M11")),
+             digits = 3, row.names = FALSE)
 ```
 
 ## Running it
