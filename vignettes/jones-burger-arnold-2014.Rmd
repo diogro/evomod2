@@ -215,6 +215,48 @@ Jones et al. report R² = 0.01 (p = 0.09) for `N = 128` and R² = 0.22
 effect and epistatic coefficient is in their Supplementary Information; the
 one used here is described above.
 
+## How the reproduction compares
+
+```{r, include = FALSE, eval = has_results}
+t2m <- function(s2, r, v) t2[t2$sigma2 == s2 & t2$r_omega == r, v]
+t3m <- function(n, r, v) t3[t3$N == n & t3$r_omega == r, v]
+f <- function(x, d = 2) { x <- round(x, d); x[x == 0] <- 0; formatC(x, format = "f", digits = d) }
+fit3 <- lapply(split(res$fig3, res$fig3$N), function(d) summary(lm(effect ~ epistasis, d)))
+```
+
+```{r, echo = FALSE, results = "asis", eval = has_results}
+cat(sprintf("
+* **Without epistasis M does not evolve**: the mutational variances stay at
+  the input value (%s) and the mutational correlation at zero, whatever the
+  selection surface, while G still follows omega (genetic correlation %s at
+  `r_omega = 0.9`; published 0.42).
+* **Epistasis inflates mutational variance** (%s at `σε² = 1`, %s at
+  `σε² = 10`, with `r_omega = 0`; published 0.27 and 0.57), and
+  **correlational selection makes M correlated** only when there is epistasis
+  (`r_M` = %s at `σε² = 1`, `r_omega = 0.9`; published 0.14).
+* **Smaller populations evolve larger mutational variances**: at
+  `r_omega = 0.9`, M11 falls from %s at N = 128 to %s at N = 2048 (published
+  0.43 and 0.10). The mutational correlation at large N is somewhat lower than
+  published (%s at N = 2048 against 0.18), and at N = 128 with `r_omega = 0.5`
+  we find none (%s against 0.11). Their mating system (two mates and four
+  offspring per female, then viability selection) gives a different
+  effective population size from evomod2's Wright-Fisher reproduction, which
+  matters most for these population-size effects.
+* **M, G and omega align**: median angles between leading eigenvectors of
+  %s degrees (G and omega) and %s degrees (M and omega), with G less elongated
+  than omega and M less than G (eigenvalue ratios %s and %s, against 19).
+* **Large populations show the negative relationship between allelic effects
+  and epistatic coefficients** (R² = %s at N = 2048; published 0.22) and small
+  populations do not (R² = %s at N = 128; published 0.01).
+",
+  f(t2m(0, 0.9, "M11")), f(t2m(0, 0.9, "rG")),
+  f(t2m(1, 0, "M11")), f(t2m(10, 0, "M11")), f(t2m(1, 0.9, "rM")),
+  f(t3m(128, 0.9, "M11")), f(t3m(2048, 0.9, "M11")), f(t3m(2048, 0.9, "rM")), f(t3m(128, 0.5, "rM")),
+  f(median(res$fig2$angle_G_omega), 1), f(median(res$fig2$angle_M_omega), 1),
+  f(median(res$fig2$G_ratio), 1), f(median(res$fig2$M_ratio), 1),
+  f(fit3[["2048"]]$r.squared), f(fit3[["128"]]$r.squared, 3)))
+```
+
 ## Running it
 
 ```sh
