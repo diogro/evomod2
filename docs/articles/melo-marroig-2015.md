@@ -17,8 +17,8 @@ runs every step from the command line, one population per process.
 ## Model
 
 Ten traits form two potential modules, traits 1-5 and 6-10. Each of 500
-diploid loci has an allelic effect `y` and a column of the binary matrix
-`B` that says which traits it affects
+diploid loci has an allelic effect \\y\\ and a column of the binary
+matrix \\B\\ that says which traits it affects
 ([`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md);
 Wagner 1989). With the parameters of the paper:
 
@@ -43,15 +43,16 @@ A few details follow the C code used for the paper rather than its text:
 - The paper gives 0.02 and 0.8 as the mutational and environmental
   *variances*; the C code used them as standard deviations, and so does
   this reproduction.
-- In the C code, a mutation of `B` set the entry to a random value, so
+- In the C code, a mutation of \\B\\ set the entry to a random value, so
   entries changed at half the nominal rate. `b_mutation = "random"`
   reproduces this; the default, `"flip"`, always changes the entry.
 - New populations start like the C code’s: a quarter of the entries of
-  `B` equal to 1, and allelic effects built from random mutations
+  \\B\\ equal to 1, and allelic effects built from random mutations
   (`init_y = "mutations"`).
 
-The correlated fitness surface has `V_omega = 10` and a correlation of
-0.8 between traits of the same module, none between modules.
+The correlated fitness surface has variances \\\Omega\_{ii} = 10\\ and a
+correlation of 0.8 between traits of the same module, none between
+modules.
 
 ## Protocol
 
@@ -77,7 +78,8 @@ divergent <- evolve(burnin, directional(10000, delta_theta = rate * rep(c(1, -1)
 ```
 
 **Corridor selection** (Fig. 3): only the optimum of module 1 moves,
-`delta_theta = rate * rep(c(1, 0), each = 5)`.
+\\\Delta\theta = r\\(1, 1, 1, 1, 1, 0, 0, 0, 0, 0)\\ for a rate \\r\\
+(`delta_theta = rate * rep(c(1, 0), each = 5)`).
 
 **Maintenance** (Fig. 4): starting from a population after 10,000
 generations of strong divergent selection (rate 0.004), 10,000

@@ -25,10 +25,11 @@ binary_b_mutation(
 \item{rate}{mutation probability per allele per generation.}
 
 \item{cov}{mutational covariance matrix (traits x traits), or a single
-number \code{s}, meaning \code{s^2} times the identity.}
+number \eqn{s}{s}, meaning \eqn{s^2 I}{s^2 times the identity}.}
 
 \item{persistence}{how much of the old effect a mutation keeps: the new
-effect is \code{persistence * old + draw}. 1 (the default) is a random walk,
+effect is \eqn{\rho e + \delta}{persistence * old + draw}, with \eqn{\rho}{rho} =
+\code{persistence}, \eqn{e}{e} the old effect and \eqn{\delta}{delta} a fresh draw. 1 (the default) is a random walk,
 where mutational effects accumulate; 0 is the house of cards model
 (Kingman 1978; Turelli 1984), where a mutation replaces the effect with a
 fresh draw unrelated to it; values in between give a regression towards

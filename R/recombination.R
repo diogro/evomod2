@@ -7,7 +7,8 @@
 #' * `genetic_map()`: loci are placed in order, evenly spaced, on `chromosomes`
 #'   chromosomes of equal length (`length`, in Morgans; loci `1..k` on the first
 #'   chromosome, and so on). Recombination fractions between neighbouring loci
-#'   follow Haldane's map function, `(1 - exp(-2 d)) / 2` for a distance `d`;
+#'   follow Haldane's map function, \eqn{r = (1 - e^{-2d}) / 2}{(1 - exp(-2 d)) / 2} for a
+#'   distance \eqn{d}{d};
 #'   loci on different chromosomes recombine with probability 1/2.
 #' * `linkage()`: explicit recombination fractions between neighbouring loci,
 #'   a vector of length `loci - 1` (0.5 for unlinked loci).

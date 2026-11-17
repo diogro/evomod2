@@ -6,11 +6,12 @@ library(evomod2)
 ```
 
 Every mutation model in evomod2 has a `persistence` parameter: a
-mutation replaces an allele’s effect `e` by
+mutation replaces an allele’s effect \\e\\ by
 
-    persistence * e + draw
+\\e' = \rho\\ e + \delta,\\
 
-where the draw comes from the model’s mutational distribution.
+where \\\rho\\ is `persistence` and the draw \\\delta\\ comes from the
+model’s mutational distribution.
 
 - `persistence = 1` (the default) is a **random walk**: mutational
   effects add up, a new allele resembles its parent, and effects can
@@ -27,9 +28,10 @@ vectors of
 [`additive()`](https://diogro.github.io/evomod2/reference/architectures.md)
 and
 [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md),
-to `y` in
+to \\y\\ in
 [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md)
-(entries of `B` still flip), and to the weight and contribution genes of
+(entries of \\B\\ still flip), and to the weight and contribution genes
+of
 [`contribution_matrix()`](https://diogro.github.io/evomod2/reference/architectures.md).
 
 ``` r
@@ -85,11 +87,12 @@ Without selection, both models reach a balance between mutation and
 drift within a population, but a different one. Two allele copies differ
 by the mutations on their lineages since their common ancestor. Under a
 random walk these add up, so the genic variance grows in proportion to
-`θ = 4 N_e μ` (`L s^2 θ` for `L` loci and mutational standard deviation
-`s`; Lande 1976); under the house of cards model only whether a mutation
-happened matters, so the variance saturates at `2 L s^2`
-(`2 L s^2 θ / (1 + θ)`). `N_e = n` for the default Wright-Fisher life
-cycle (about `n / 2` with
+\\\vartheta = 4 N_e \mu\\ (\\L s^2 \vartheta\\ for \\L\\ loci and
+mutational standard deviation \\s\\; Lande 1976); under the house of
+cards model only whether a mutation happened matters, so the variance
+saturates at \\2 L s^2\\ (\\2 L s^2 \vartheta / (1 + \vartheta)\\).
+\\N_e = n\\ for the default Wright-Fisher life cycle (about \\n / 2\\
+with
 [`moran()`](https://diogro.github.io/evomod2/reference/life_cycles.md)):
 
 ``` r

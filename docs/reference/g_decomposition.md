@@ -4,7 +4,8 @@ Splits the G matrix of the current population into the G expected
 without associations between loci (`genic`) and the remainder (`ld`),
 due to linkage disequilibrium between loci and departures from
 Hardy-Weinberg. All matrices use the `n - 1` denominator of
-[`stats::cov()`](https://rdrr.io/r/stats/cor.html), so `G = genic + ld`.
+[`stats::cov()`](https://rdrr.io/r/stats/cor.html), so \\G =
+G\_\mathrm{genic} + G\_\mathrm{ld}\\.
 
 ## Usage
 
@@ -52,9 +53,19 @@ A list with matrices `G`, `genic` and `ld`.
 
 ## References
 
+Melo, D., Marroig, G., & Wolf, J. B. (2019). Genomic perspective on
+multivariate variation, pleiotropy, and evolution. *Journal of
+Heredity*, 110(4), 479-493.
+[doi:10.1093/jhered/esz011](https://doi.org/10.1093/jhered/esz011)
+
+Bulmer, M. G. (1971). The effect of selection on genetic variability.
+*The American Naturalist*, 105(943), 201-211.
+[doi:10.1086/282718](https://doi.org/10.1086/282718)
+
 do O, I., & Whitlock, M. C. (2023). The evolution of genetic covariance
 and modularity as a result of multigenerational environmental
 fluctuation. *Evolution Letters*, 7(6), 457-466.
+[doi:10.1093/evlett/qrad048](https://doi.org/10.1093/evlett/qrad048)
 
 ## Examples
 

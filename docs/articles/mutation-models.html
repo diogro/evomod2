@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Mutation models: random walk and house of cards • evomod2</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -74,9 +80,11 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://diogro.github.io/evomod2/">evomod2</a></span><span class="op">)</span></span></code></pre></div>
 <p>Every mutation model in evomod2 has a <code>persistence</code>
-parameter: a mutation replaces an allele’s effect <code>e</code> by</p>
-<pre><code><span><span class="va">persistence</span> <span class="op">*</span> <span class="va">e</span> <span class="op">+</span> <span class="va">draw</span></span></code></pre>
-<p>where the draw comes from the model’s mutational distribution.</p>
+parameter: a mutation replaces an allele’s effect <span class="math inline">\(e\)</span> by</p>
+<p><span class="math display">\[e' = \rho\, e + \delta,\]</span></p>
+<p>where <span class="math inline">\(\rho\)</span> is
+<code>persistence</code> and the draw <span class="math inline">\(\delta\)</span> comes from the model’s mutational
+distribution.</p>
 <ul>
 <li>
 <code>persistence = 1</code> (the default) is a <strong>random
@@ -94,10 +102,10 @@ genotype (Zeng &amp; Cockerham 1993).</li>
 </ul>
 <p><code>persistence</code> works with every architecture: it applies to
 the effect vectors of <code><a href="../reference/architectures.html">additive()</a></code> and
-<code><a href="../reference/architectures.html">multilinear()</a></code>, to <code>y</code> in <code><a href="../reference/architectures.html">binary_b()</a></code>
-(entries of <code>B</code> still flip), and to the weight and
+<code><a href="../reference/architectures.html">multilinear()</a></code>, to <span class="math inline">\(y\)</span> in
+<code><a href="../reference/architectures.html">binary_b()</a></code> (entries of <span class="math inline">\(B\)</span> still flip), and to the weight and
 contribution genes of <code><a href="../reference/architectures.html">contribution_matrix()</a></code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mutation.html">hoc_mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.001</span>, cov <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $type</span></span>
 <span><span class="co">#&gt; [1] "gaussian"</span></span>
@@ -147,14 +155,14 @@ it.</p>
 drift within a population, but a different one. Two allele copies differ
 by the mutations on their lineages since their common ancestor. Under a
 random walk these add up, so the genic variance grows in proportion to
-<code>θ = 4 N_e μ</code> (<code>L s^2 θ</code> for <code>L</code> loci
-and mutational standard deviation <code>s</code>; Lande 1976); under the
-house of cards model only whether a mutation happened matters, so the
-variance saturates at <code>2 L s^2</code>
-(<code>2 L s^2 θ / (1 + θ)</code>). <code>N_e = n</code> for the default
-Wright-Fisher life cycle (about <code>n / 2</code> with
-<code><a href="../reference/life_cycles.html">moran()</a></code>):</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<span class="math inline">\(\vartheta = 4 N_e \mu\)</span> (<span class="math inline">\(L s^2 \vartheta\)</span> for <span class="math inline">\(L\)</span> loci and mutational standard deviation
+<span class="math inline">\(s\)</span>; Lande 1976); under the house of
+cards model only whether a mutation happened matters, so the variance
+saturates at <span class="math inline">\(2 L s^2\)</span> (<span class="math inline">\(2 L s^2 \vartheta / (1 + \vartheta)\)</span>).
+<span class="math inline">\(N_e = n\)</span> for the default
+Wright-Fisher life cycle (about <span class="math inline">\(n /
+2\)</span> with <code><a href="../reference/life_cycles.html">moran()</a></code>):</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span>; <span class="va">loci</span> <span class="op">&lt;-</span> <span class="fl">50</span>; <span class="va">s</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span><span class="va">thetas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">8</span>, <span class="fl">16</span><span class="op">)</span></span>
 <span><span class="va">equilibrium</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">thetas</span>, <span class="kw">function</span><span class="op">(</span><span class="va">th</span><span class="op">)</span> <span class="op">{</span></span>
@@ -180,7 +188,7 @@ equilibrium for both life cycles with more precision.)</p>
 populations drift apart forever, with the variance among their means
 growing linearly in time. Under the house of cards model the mean stays
 within the range of the mutational distribution:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">divergence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>random_walk <span class="op">=</span> <span class="fl">1</span>, house_of_cards <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pers</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evomod_model.html">evomod_model</a></span><span class="op">(</span><span class="fu"><a href="../reference/architectures.html">additive</a></span><span class="op">(</span><span class="va">loci</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="../reference/mutation.html">mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">4</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span>, cov <span class="op">=</span> <span class="va">s</span>, persistence <span class="op">=</span> <span class="va">pers</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span></span>
@@ -200,7 +208,7 @@ within the range of the mutational distribution:</p>
 <p>When the optimum is at the reference genotype, the alleles that
 segregate have small effects, so the old effect matters little and both
 models maintain about the same genetic variance:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>random_walk <span class="op">=</span> <span class="fl">1</span>, house_of_cards <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pers</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evomod_model.html">evomod_model</a></span><span class="op">(</span><span class="fu"><a href="../reference/architectures.html">additive</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="../reference/mutation.html">mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.0005</span>, cov <span class="op">=</span> <span class="fl">1</span>, persistence <span class="op">=</span> <span class="va">pers</span><span class="op">)</span>,</span>
 <span>                    env_sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -221,7 +229,7 @@ that selection already favoured, and the population tracks the optimum.
 Under the house of cards model every mutation starts again from the same
 distribution: going further needs ever rarer alleles from its tail, and
 the response stalls:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">moving</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/regimes.html">stabilizing</a></span><span class="op">(</span><span class="fl">500</span>, omega <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span>
 <span>               <span class="fu"><a href="../reference/regimes.html">directional</a></span><span class="op">(</span><span class="fl">3000</span>, delta_theta <span class="op">=</span> <span class="fl">0.01</span>, omega <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>random_walk <span class="op">=</span> <span class="fl">1</span>, house_of_cards <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pers</span><span class="op">)</span> <span class="op">{</span></span>

@@ -51,12 +51,13 @@ binary_b_mutation(
 - cov:
 
   mutational covariance matrix (traits x traits), or a single number
-  `s`, meaning `s^2` times the identity.
+  \\s\\, meaning \\s^2 I\\.
 
 - persistence:
 
-  how much of the old effect a mutation keeps: the new effect is
-  `persistence * old + draw`. 1 (the default) is a random walk, where
+  how much of the old effect a mutation keeps: the new effect is \\\rho
+  e + \delta\\, with \\\rho\\ = `persistence`, \\e\\ the old effect and
+  \\\delta\\ a fresh draw. 1 (the default) is a random walk, where
   mutational effects accumulate; 0 is the house of cards model (Kingman
   1978; Turelli 1984), where a mutation replaces the effect with a fresh
   draw unrelated to it; values in between give a regression towards the

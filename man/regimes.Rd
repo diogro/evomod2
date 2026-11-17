@@ -53,7 +53,8 @@ A simulation runs through a list of regimes:
 \itemize{
 \item \code{drift()}: no selection.
 \item \code{stabilizing()}: Gaussian fitness surface with optimum \code{theta} and
-covariance \code{omega}, \verb{w(z) = exp(-(z - theta)' omega^-1 (z - theta) / 2)}.
+covariance \code{omega},
+\deqn{w(z) = \exp\left(-\frac{1}{2} (z - \theta)^\top \Omega^{-1} (z - \theta)\right).}{w(z) = exp(-(z - theta)' omega^-1 (z - theta) / 2).}
 \item \code{directional()}: as stabilizing, but the optimum moves by \code{delta_theta}
 every generation (before selection).
 \item \code{fluctuating()}: as stabilizing, but after every \code{every} generations the

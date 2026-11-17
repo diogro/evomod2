@@ -1,10 +1,20 @@
 # evomod2
 
 Individual-based simulations of the evolution of genetic architecture in
-multivariate quantitative traits, with additive, multilinear epistatic
-or binary ontogenetic matrix genotype-phenotype maps. The simulation
-engine is written in C++ (Rcpp + RcppArmadillo); everything is driven
-from R.
+multivariate quantitative traits. Genotype-phenotype maps can be
+additive, multilinear epistatic (one tensor shared by all pairs of loci,
+or one per pair), a binary ontogenetic matrix (Melo & Marroig 2015) or a
+contribution matrix (do O & Whitlock 2023); mutation can be a random
+walk or house of cards; loci can be unlinked or on a genetic map;
+populations can have discrete generations, overlapping generations or
+separate sexes with viability selection; and the optimum can be stable,
+move steadily or fluctuate. The analysis tools split G into its
+pleiotropic and linkage disequilibrium parts and its additive and
+epistatic parts, and measure the mutational covariance matrix M. The
+simulation engine is written in C++ (Rcpp + RcppArmadillo); everything
+is driven from R.
+
+Documentation and articles: <https://diogro.github.io/evomod2/>.
 
 evomod2 extends the model of Melo & Marroig (2015, *PNAS*
 [10.1073/pnas.1322632112](https://doi.org/10.1073/pnas.1322632112)). The
@@ -25,9 +35,9 @@ Windows).
 
 ## Usage
 
-A model combines a genetic architecture, a mutation model and
-environmental noise. A population then evolves through a list of
-selection regimes.
+A model combines a genetic architecture, a mutation model, environmental
+noise, recombination and a life cycle. A population then evolves through
+a list of selection regimes.
 
 ``` r
 
@@ -55,6 +65,19 @@ g_matrices(pop)           # G matrices by generation
 pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same population
 ```
 
+The other components are chosen the same way, for example:
+
+``` r
+
+evomod_model(
+  architecture = multilinear(20, 2, epsilon = pairwise_epsilon(20, 2, sd = 1)),  # one tensor per pair of loci
+  mutation = hoc_mutation(rate = 0.0005, cov = 0.2),          # house of cards
+  env_sd = 1,
+  recombination = genetic_map(chromosomes = 2, length = 0.5),
+  life_cycle = viability_selection(mates = 2, offspring_per_mate = 2))
+fluctuating(5000, every = 10, step = 0.2, omega = 1, structure = list(1:2, 3:4))
+```
+
 ### Genic and linkage disequilibrium parts of G
 
 For architectures where genotypic values are sums of allele effects
@@ -75,7 +98,8 @@ g_matrices(pop, "ld")          # the LD part at every recorded generation
 
 Pleiotropy shows up in the genic part (one allele affecting several
 traits), while correlations built by selection between loci show up in
-the LD part.
+the LD part (see Melo, Marroig & Wolf 2019 for this decomposition of
+genetic covariance and its evolutionary consequences).
 
 For any architecture, including
 [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md),
@@ -86,6 +110,19 @@ frequencies (as in do O & Whitlock 2023):
 ``` r
 
 g_decomposition(pop, method = "shuffle", shuffles = 20)
+```
+
+### Additive and epistatic parts of G
+
+With epistasis, part of G is not additive.
+[`additive_covariance()`](https://diogro.github.io/evomod2/reference/additive_covariance.md)
+estimates the additive genetic covariance by least squares, from the
+state of every locus, for any architecture; `G - additive` is the
+epistatic part:
+
+``` r
+
+additive_covariance(pop)       # G, additive and nonadditive
 ```
 
 ### Mutational covariance
@@ -102,6 +139,21 @@ itself evolves:
 
 mutational_covariance(pop, n = 10000)
 ```
+
+### Matrix statistics
+
+[`avg_corr()`](https://diogro.github.io/evomod2/reference/avg_corr.md)
+(average correlations within and between modules, and their ratio),
+[`autonomy()`](https://diogro.github.io/evomod2/reference/matrix_statistics.md)
+and
+[`mean_autonomy()`](https://diogro.github.io/evomod2/reference/matrix_statistics.md)
+(Hansen & Houle 2008),
+[`eigen_variance()`](https://diogro.github.io/evomod2/reference/matrix_statistics.md)
+(proportion of variance per principal component), and
+[`mean_fitness()`](https://diogro.github.io/evomod2/reference/statistics.md)
+and
+[`local_effects()`](https://diogro.github.io/evomod2/reference/genomes.md)
+for the population itself.
 
 ### Documentation
 
@@ -130,52 +182,66 @@ mutational_covariance(pop, n = 10000)
   `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`,
   `fluctuating_environments.R`, `jones_burger_arnold_2014.R`.
 
-Install with
+All of them are also on the website,
+<https://diogro.github.io/evomod2/>, or install with
 `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)` to
-get the vignettes.
+get them locally.
 
 ### The model
 
 - **Genomes**: each allele carries an effect vector in trait space; the
-  effect of a locus, `Y_l`, is the sum of its two alleles. Effects are
+  effect of a locus, \\Y_l\\, is the sum of its two alleles. Effects are
   measured from the reference genotype (all effects zero), where new
   populations start unless `init_sd > 0`.
 - **Architectures**:
   - [`additive()`](https://diogro.github.io/evomod2/reference/architectures.md):
-    `x = Σ Y_l`.
+    \\x = \sum_l Y_l\\.
   - [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md):
-    `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a
-    `traits × traits × traits` tensor `ε` shared by all pairs of loci
-    (Hansen & Wagner 2001).
+    \\x = S + \sum\_{i\<j} \varepsilon(Y_i, Y_j)\\ with \\S = \sum_l
+    Y_l\\ and a traits × traits × traits tensor \\\varepsilon\\ shared
+    by all pairs of loci (Hansen & Wagner 2001;
+    [`random_epsilon()`](https://diogro.github.io/evomod2/reference/random_epsilon.md)),
+    or a different tensor for every pair of loci (Jones, Bürger & Arnold
+    2014;
+    [`pairwise_epsilon()`](https://diogro.github.io/evomod2/reference/pairwise_epsilon.md)).
   - [`contribution_matrix()`](https://diogro.github.io/evomod2/reference/architectures.md):
-    the model of do O & Whitlock (2023), `x = C a` with weight genes `a`
-    and contribution genes `C` as separate loci, used with
+    the model of do O & Whitlock (2023), \\x = C a\\ with weight genes
+    \\a\\ and contribution genes \\C\\ as separate loci, used with
     [`contribution_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md).
   - [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md):
     the model of Melo & Marroig (2015). Each allele has a scalar effect
-    `y` and a column of a binary matrix `B` saying which traits it
-    affects, `x = B y`. Used with
+    \\y\\ and a column of a binary matrix \\B\\ saying which traits it
+    affects, \\x = B y\\. Used with
     [`binary_b_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md),
-    which mutates `y` and the entries of `B` separately
+    which mutates \\y\\ and the entries of \\B\\ separately
     (`b_mutation = "random"` reproduces the B mutation of the published
     simulations, which changed entries at half the nominal rate).
 
   [`local_effects()`](https://diogro.github.io/evomod2/reference/genomes.md)
   gives each locus’s effect in the background of the rest of the genome.
-- **Phenotypes**: `z = x + e`, `e ~ N(0, env_sd²)`.
+- **Phenotypes**: \\z = x + e\\, \\e \sim N(0, \sigma_e^2 I)\\ with
+  \\\sigma_e\\ = `env_sd`.
 - **Life cycle**: discrete generations
   ([`wright_fisher()`](https://diogro.github.io/evomod2/reference/life_cycles.md),
   the default) or overlapping generations
   ([`moran()`](https://diogro.github.io/evomod2/reference/life_cycles.md):
-  a generation is `n` birth-death events, each replacing a random
+  a generation is \\n\\ birth-death events, each replacing a random
   individual by the offspring of two parents drawn in proportion to
   fitness), or the life cycle of Jones et al.
   ([`viability_selection()`](https://diogro.github.io/evomod2/reference/life_cycles.md):
   separate sexes, females mating with several males, viability selection
   on zygotes); `evomod_model(..., life_cycle = moran())`.
-- **Mutation**: a mutation replaces an allele’s effect `e` by
-  `persistence * e + draw`; `persistence = 1` (default) is a random
-  walk, `0` the house of cards model
+- **Mutation**: each allele mutates with probability `rate` per
+  generation
+  ([`mutation()`](https://diogro.github.io/evomod2/reference/mutation.md)
+  adds a multivariate normal vector with covariance `cov`;
+  [`binary_b_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md)
+  and
+  [`contribution_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md)
+  have their own rates for each kind of gene). A mutation replaces an
+  allele’s effect \\e\\ by \\\rho\\ e + \delta\\, with \\\rho\\ =
+  `persistence` and \\\delta\\ a fresh draw; `persistence = 1` (default)
+  is a random walk, `0` the house of cards model
   ([`hoc_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md)),
   for every architecture.
 - **Recombination**: loci are unlinked by default.
@@ -192,11 +258,17 @@ get the vignettes.
   (the optimum jumps up or down every few generations, all traits
   together, independently, or in blocks; do O & Whitlock 2023).
 - **Each generation**: the optimum moves (directional and fluctuating
-  regimes), fitness `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed,
-  every individual mutates (each allele with probability `rate`, adding
-  a `N(0, cov)` vector), and `n` offspring are produced from parents
-  drawn with probability proportional to fitness, with free
-  recombination.
+  regimes), fitness \\w = \exp(-\tfrac{1}{2} (z - \theta)^\top
+  \Omega^{-1} (z - \theta))\\ is computed, and the life cycle produces
+  the next generation: with
+  [`wright_fisher()`](https://diogro.github.io/evomod2/reference/life_cycles.md),
+  every individual mutates and \\n\\ offspring are produced from parents
+  drawn with probability proportional to fitness; with
+  [`moran()`](https://diogro.github.io/evomod2/reference/life_cycles.md),
+  \\n\\ birth-death events; with
+  [`viability_selection()`](https://diogro.github.io/evomod2/reference/life_cycles.md),
+  matings, zygotes surviving with probability \\w\\, and regulation back
+  to \\n\\. Offspring inherit alleles through the model’s recombination.
 - **Random numbers** come from R’s generator:
   [`set.seed()`](https://rdrr.io/r/base/Random.html) or `seed` makes
   runs reproducible, and continuing a population gives the same result
@@ -208,10 +280,13 @@ The engine is a set of C++ components declared in `src/evomod.h`:
 
 | Interface | Role | Implementations |
 |----|----|----|
-| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `BinaryB` |
-| `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation` |
+| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `MultilinearPairwise`, `BinaryB`, `ContributionMatrix` |
+| `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation`, `ContributionMutation` |
 | `Fitness` | phenotypes → log fitness | `GaussianFitness` |
 | `Recombination` | parents → offspring genome | `FreeRecombination`, `LinkageMap` |
+
+Regimes and life cycles are handled in the generation loop
+(`evolve_cpp()` in `src/simulate.cpp`).
 
 To add, for example, a new architecture:
 
@@ -233,6 +308,12 @@ To add, for example, a new architecture:
     version of the same map), and, for new models, prototype and
     cross-check against EvoMod.jl.
 
+[DEVELOPMENT.md](https://diogro.github.io/evomod2/DEVELOPMENT.md)
+describes the generation loop, the interfaces, random numbers, building
+and testing in more detail, and
+[AGENTS.md](https://diogro.github.io/evomod2/AGENTS.md) summarises how
+to use the package for AI coding agents.
+
 ## Validation
 
 The scripts in `validation/` run matching simulations in evomod2 and in
@@ -244,7 +325,15 @@ and trait means:
 Rscript validation/cross_check.R path/to/evomod_julia 20
 # binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)
 Rscript validation/cross_check_c.R path/to/evomod/c-gsl 100 8
+# binary B with Moran, contribution matrix with a fluctuating optimum, pairwise
+# epistasis with viability selection, house of cards on a genetic map, against
+# EvoMod.Sim (the Julia port of evomod2)
+Rscript validation/cross_check_sim.R path/to/evomod_julia 100 8
 ```
+
+The Julia package EvoMod.jl includes a port of evomod2 (`EvoMod.Sim`,
+same function names), so models can be prototyped in Julia and results
+checked against an independent implementation.
 
 The C code moves the optimum after each generation and skips the first
 directional step, so under directional selection its trait means lag
@@ -252,9 +341,89 @@ evomod2’s by about two generations of optimum movement.
 
 ## References
 
-Hansen, T. F., & Wagner, G. P. (2001). Modeling genetic architecture: a
-multilinear theory of gene interaction. *Theoretical Population
-Biology*, 59(1), 61-86.
+### Models implemented
 
-Melo, D., & Marroig, G. (2015). Directional selection can drive the
-evolution of modularity in complex traits. *PNAS*, 112(2), 470-475.
+- **Binary B matrix:** Wagner, G. P. (1989). Multivariate
+  mutation-selection balance with constrained pleiotropic effects.
+  *Genetics*, 122(1), 223-234.
+  [doi:10.1093/genetics/122.1.223](https://doi.org/10.1093/genetics/122.1.223);
+  Melo, D., & Marroig, G. (2015). Directional selection can drive the
+  evolution of modularity in complex traits. *PNAS*, 112(2), 470-475.
+  [doi:10.1073/pnas.1322632112](https://doi.org/10.1073/pnas.1322632112)
+- **Multilinear epistasis:** Hansen, T. F., & Wagner, G. P. (2001).
+  Modeling genetic architecture: a multilinear theory of gene
+  interaction. *Theoretical Population Biology*, 59(1), 61-86.
+  [doi:10.1006/tpbi.2000.1508](https://doi.org/10.1006/tpbi.2000.1508);
+  Hermisson, J., Hansen, T. F., & Wagner, G. P. (2003). Epistasis in
+  polygenic traits and the evolution of genetic architecture under
+  stabilizing selection. *The American Naturalist*, 161(5), 708-734.
+  [doi:10.1086/374204](https://doi.org/10.1086/374204)
+- **Additive pleiotropic mutation, random epistasis between pairs of
+  loci, and the
+  [`viability_selection()`](https://diogro.github.io/evomod2/reference/life_cycles.md)
+  life cycle:** Jones, A. G., Arnold, S. J., & Bürger, R. (2003).
+  Stability of the G-matrix in a population experiencing pleiotropic
+  mutation, stabilizing selection, and genetic drift. *Evolution*,
+  57(8), 1747-1760.
+  [doi:10.1554/02-631](https://doi.org/10.1554/02-631); Jones, A. G.,
+  Arnold, S. J., & Bürger, R. (2004). Evolution and stability of the
+  G-matrix on a landscape with a moving optimum. *Evolution*, 58(8),
+  1639-1654. [doi:10.1554/03-651](https://doi.org/10.1554/03-651);
+  Jones, A. G., Bürger, R., & Arnold, S. J. (2014). Epistasis and
+  natural selection shape the mutational architecture of complex traits.
+  *Nature Communications*, 5, 3709.
+  [doi:10.1038/ncomms4709](https://doi.org/10.1038/ncomms4709)
+- **Contribution matrix and fluctuating optima:** do O, I., &
+  Whitlock, M. C. (2023). The evolution of genetic covariance and
+  modularity as a result of multigenerational environmental fluctuation.
+  *Evolution Letters*, 7(6), 457-466.
+  [doi:10.1093/evlett/qrad048](https://doi.org/10.1093/evlett/qrad048)
+- **House of cards mutation:** Kingman, J. F. C. (1978). A simple model
+  for the balance between selection and mutation. *Journal of Applied
+  Probability*, 15(1), 1-12.
+  [doi:10.2307/3213231](https://doi.org/10.2307/3213231); Turelli, M.
+  (1984). Heritable genetic variation via mutation-selection balance:
+  Lerch’s zeta meets the abdominal bristle. *Theoretical Population
+  Biology*, 25(2), 138-193.
+  [doi:10.1016/0040-5809(84)90017-0](https://doi.org/10.1016/0040-5809(84)90017-0);
+  Zeng, Z.-B., & Cockerham, C. C. (1993). Mutation models and
+  quantitative genetic variation. *Genetics*, 133(3), 729-736.
+  [doi:10.1093/genetics/133.3.729](https://doi.org/10.1093/genetics/133.3.729)
+- **Genetic map:** Haldane, J. B. S. (1919). The combination of linkage
+  values and the calculation of distances between the loci of linked
+  factors. *Journal of Genetics*, 8(4), 299-309.
+
+### Results reproduced in the vignettes
+
+- Melo & Marroig (2015),
+  [`vignette("melo-marroig-2015")`](https://diogro.github.io/evomod2/articles/melo-marroig-2015.md)
+- Jones, Bürger & Arnold (2014),
+  [`vignette("jones-burger-arnold-2014")`](https://diogro.github.io/evomod2/articles/jones-burger-arnold-2014.md)
+- do O & Whitlock (2023),
+  [`vignette("fluctuating-environments")`](https://diogro.github.io/evomod2/articles/fluctuating-environments.md)
+
+### Theory and statistics
+
+- **Response to selection and drift of multivariate traits:** Lande, R.
+  (1976). Natural selection and random genetic drift in phenotypic
+  evolution. *Evolution*, 30(2), 314-334.
+  [doi:10.1111/j.1558-5646.1976.tb00911.x](https://doi.org/10.1111/j.1558-5646.1976.tb00911.x);
+  Lande, R. (1979). Quantitative genetic analysis of multivariate
+  evolution, applied to brain: body size allometry. *Evolution*, 33(1),
+  402-416. [doi:10.2307/2407630](https://doi.org/10.2307/2407630)
+- **Pleiotropy and linkage disequilibrium (genic and LD parts of G):**
+  Bulmer, M. G. (1971). The effect of selection on genetic variability.
+  *The American Naturalist*, 105(943), 201-211.
+  [doi:10.1086/282718](https://doi.org/10.1086/282718); Melo, D.,
+  Marroig, G., & Wolf, J. B. (2019). Genomic perspective on multivariate
+  variation, pleiotropy, and evolution. *Journal of Heredity*, 110(4),
+  479-493.
+  [doi:10.1093/jhered/esz011](https://doi.org/10.1093/jhered/esz011)
+- **Evolvability and autonomy:** Hansen, T. F., & Houle, D. (2008).
+  Measuring and comparing evolvability and constraint in multivariate
+  characters. *Journal of Evolutionary Biology*, 21(5), 1201-1219.
+  [doi:10.1111/j.1420-9101.2008.01573.x](https://doi.org/10.1111/j.1420-9101.2008.01573.x)
+- **Modularity:** Melo, D., Porto, A., Cheverud, J. M., & Marroig, G.
+  (2016). Modularity: genes, development, and evolution. *Annual Review
+  of Ecology, Evolution, and Systematics*, 47, 463-486.
+  [doi:10.1146/annurev-ecolsys-121415-032409](https://doi.org/10.1146/annurev-ecolsys-121415-032409)

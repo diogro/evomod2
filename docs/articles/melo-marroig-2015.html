@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Reproducing Melo &amp; Marroig (2015) • evomod2</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -87,8 +93,7 @@ step from the command line, one population per process.</p>
 <h2 id="model">Model<a class="anchor" aria-label="anchor" href="#model"></a>
 </h2>
 <p>Ten traits form two potential modules, traits 1-5 and 6-10. Each of
-500 diploid loci has an allelic effect <code>y</code> and a column of
-the binary matrix <code>B</code> that says which traits it affects
+500 diploid loci has an allelic effect <span class="math inline">\(y\)</span> and a column of the binary matrix <span class="math inline">\(B\)</span> that says which traits it affects
 (<code><a href="../reference/architectures.html">binary_b()</a></code>; Wagner 1989). With the parameters of the
 paper:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -110,17 +115,16 @@ text:</p>
 <li>The paper gives 0.02 and 0.8 as the mutational and environmental
 <em>variances</em>; the C code used them as standard deviations, and so
 does this reproduction.</li>
-<li>In the C code, a mutation of <code>B</code> set the entry to a
-random value, so entries changed at half the nominal rate.
-<code>b_mutation = "random"</code> reproduces this; the default,
+<li>In the C code, a mutation of <span class="math inline">\(B\)</span>
+set the entry to a random value, so entries changed at half the nominal
+rate. <code>b_mutation = "random"</code> reproduces this; the default,
 <code>"flip"</code>, always changes the entry.</li>
 <li>New populations start like the C code’s: a quarter of the entries of
-<code>B</code> equal to 1, and allelic effects built from random
-mutations (<code>init_y = "mutations"</code>).</li>
+<span class="math inline">\(B\)</span> equal to 1, and allelic effects
+built from random mutations (<code>init_y = "mutations"</code>).</li>
 </ul>
-<p>The correlated fitness surface has <code>V_omega = 10</code> and a
-correlation of 0.8 between traits of the same module, none between
-modules.</p>
+<p>The correlated fitness surface has variances <span class="math inline">\(\Omega_{ii} = 10\)</span> and a correlation of 0.8
+between traits of the same module, none between modules.</p>
 </div>
 <div class="section level2">
 <h2 id="protocol">Protocol<a class="anchor" aria-label="anchor" href="#protocol"></a>
@@ -141,8 +145,9 @@ for 10,000 generations:</p>
 <span><span class="va">divergent</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evolve.html">evolve</a></span><span class="op">(</span><span class="va">burnin</span>, <span class="fu"><a href="../reference/regimes.html">directional</a></span><span class="op">(</span><span class="fl">10000</span>, delta_theta <span class="op">=</span> <span class="va">rate</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
 <span>                                        omega <span class="op">=</span> <span class="va">omega_correlated</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Corridor selection</strong> (Fig. 3): only the optimum of
-module 1 moves,
-<code>delta_theta = rate * rep(c(1, 0), each = 5)</code>.</p>
+module 1 moves, <span class="math inline">\(\Delta\theta = r\,(1, 1, 1,
+1, 1, 0, 0, 0, 0, 0)\)</span> for a rate <span class="math inline">\(r\)</span>
+(<code>delta_theta = rate * rep(c(1, 0), each = 5)</code>).</p>
 <p><strong>Maintenance</strong> (Fig. 4): starting from a population
 after 10,000 generations of strong divergent selection (rate 0.004),
 10,000 generations of drift, uncorrelated stabilizing selection or

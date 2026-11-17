@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Genetic architectures, epistasis and linkage • evomod2</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -108,31 +114,31 @@ locus. They differ in what an allele is and how loci combine:</p>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/architectures.html">binary_b()</a></code></td>
-<td>a scalar effect <code>y</code> and a 0/1 column of
-<code>B</code>
+<td>a scalar effect <span class="math inline">\(y\)</span> and a 0/1
+column of <span class="math inline">\(B\)</span>
 </td>
-<td><code>B y</code></td>
+<td><span class="math inline">\(B y\)</span></td>
 <td>
 <code><a href="../reference/mutation.html">binary_b_mutation()</a></code>: changes <code>y</code>, flips
-entries of <code>B</code>
+entries of <span class="math inline">\(B\)</span>
 </td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/architectures.html">multilinear()</a></code></td>
 <td>an effect vector</td>
-<td>sum over loci plus pairwise interactions
-<code>ε(Y_i, Y_j)</code>
+<td>sum over loci plus pairwise interactions <span class="math inline">\(\varepsilon(Y_i, Y_j)\)</span>
 </td>
 <td><code><a href="../reference/mutation.html">mutation()</a></code></td>
 </tr>
 </tbody>
 </table>
 <p>In <code><a href="../reference/architectures.html">binary_b()</a></code> an allele affects the traits marked in its
-column of <code>B</code>, all by the same amount, and <code>B</code>
-mutates, so the pattern of pleiotropy itself can evolve. In
-<code><a href="../reference/architectures.html">additive()</a></code> every allele affects every trait with
-independent effects. <code><a href="../reference/architectures.html">multilinear()</a></code> adds epistasis: the
-effect of a locus depends on the rest of the genome.</p>
+column of <span class="math inline">\(B\)</span>, all by the same
+amount, and <span class="math inline">\(B\)</span> mutates, so the
+pattern of pleiotropy itself can evolve. In <code><a href="../reference/architectures.html">additive()</a></code>
+every allele affects every trait with independent effects.
+<code><a href="../reference/architectures.html">multilinear()</a></code> adds epistasis: the effect of a locus depends
+on the rest of the genome.</p>
 </div>
 <div class="section level2">
 <h2 id="pleiotropy-and-modularity-under-corridor-selection">Pleiotropy and modularity under corridor selection<a class="anchor" aria-label="anchor" href="#pleiotropy-and-modularity-under-corridor-selection"></a>
@@ -179,22 +185,22 @@ time:</p>
 <p><img src="architectures_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="672"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<p>With a binary <code>B</code>, alleles affecting several traits create
-correlations, and selection can change which traits alleles affect.
-(These are single populations, so the traces are noisy.) In the additive
-model, correlations only appear as selection enriches alleles whose
-effects on the selected traits point the same way.
-<code>inst/examples/corridor_selection.R</code> runs this comparison
-with 20 replicates.</p>
+<p>With a binary <span class="math inline">\(B\)</span>, alleles
+affecting several traits create correlations, and selection can change
+which traits alleles affect. (These are single populations, so the
+traces are noisy.) In the additive model, correlations only appear as
+selection enriches alleles whose effects on the selected traits point
+the same way. <code>inst/examples/corridor_selection.R</code> runs this
+comparison with 20 replicates.</p>
 </div>
 <div class="section level2">
 <h2 id="multilinear-epistasis">Multilinear epistasis<a class="anchor" aria-label="anchor" href="#multilinear-epistasis"></a>
 </h2>
 <p>With multilinear epistasis the effect of an allele depends on the
-genetic background. Positive directional epistasis (here
-<code>ε[1, 1, 1] &gt; 0</code>) makes substitutions in trait 1 larger as
-the population moves in the positive direction, so additive variance
-grows under directional selection; negative epistasis shrinks it:</p>
+genetic background. Positive directional epistasis (here <span class="math inline">\(\varepsilon_{111} &gt; 0\)</span>) makes
+substitutions in trait 1 larger as the population moves in the positive
+direction, so additive variance grows under directional selection;
+negative epistasis shrinks it:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">self_epistasis</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">E</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">array</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
@@ -220,10 +226,10 @@ grows under directional selection; negative epistasis shrinks it:</p>
 <p><code><a href="../reference/genomes.html">local_effects()</a></code> gives the effect of each locus in the
 background of the rest of the genome. After the population has moved in
 the positive direction of trait 1, positive epistasis amplifies every
-locus effect on trait 1 (by about <code>1 + ε S</code>, where
-<code>S</code> is the sum of the other locus effects), so local effects
-lie on a line steeper than 1 when plotted against the reference
-effects:</p>
+locus effect on trait 1 (by about <span class="math inline">\(1 +
+\varepsilon S\)</span>, where <span class="math inline">\(S\)</span> is
+the sum of the other locus effects), so local effects lie on a line
+steeper than 1 when plotted against the reference effects:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evomod_model.html">evomod_model</a></span><span class="op">(</span><span class="fu"><a href="../reference/architectures.html">multilinear</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">2</span>, <span class="fu">self_epistasis</span><span class="op">(</span><span class="fl">0.05</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                  <span class="fu"><a href="../reference/mutation.html">mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.005</span>, cov <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>, env_sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -298,12 +304,12 @@ section:</p>
 there is epistasis. <code><a href="../reference/mutational_covariance.html">mutational_covariance()</a></code> applies single
 mutations to genomes of the population and measures their effects. In
 the additive model the covariance of the effects of one mutation is the
-mutational covariance of the model (<code>0.05^2</code> here); with
-positive directional epistasis, after the population moved in the
-positive direction of trait 1, a mutation of size <code>d</code> at
-trait 1 changes the trait by <code>d (1 + ε (S - Y_l))</code>, so
-mutational effects are larger (their mean stays zero, because the map is
-linear in each locus):</p>
+mutational covariance of the model (<span class="math inline">\(0.05^2\)</span> here); with positive directional
+epistasis, after the population moved in the positive direction of trait
+1, a mutation of size <span class="math inline">\(d\)</span> at trait 1
+changes the trait by <span class="math inline">\(d\,(1 + \varepsilon (S
+- Y_l))\)</span>, so mutational effects are larger (their mean stays
+zero, because the map is linear in each locus):</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evomod_model.html">evomod_model</a></span><span class="op">(</span><span class="fu"><a href="../reference/architectures.html">additive</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="../reference/mutation.html">mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.005</span>, cov <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>, env_sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">pop_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evolve.html">evolve</a></span><span class="op">(</span><span class="va">add</span>, <span class="va">selection</span>, n <span class="op">=</span> <span class="fl">500</span>, record_every <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>

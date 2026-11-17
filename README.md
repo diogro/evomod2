@@ -165,30 +165,30 @@ to get them locally.
 ### The model
 
 * **Genomes**: each allele carries an effect vector in trait space; the effect
-  of a locus, `Y_l`, is the sum of its two alleles. Effects are measured from
+  of a locus, $Y_l$, is the sum of its two alleles. Effects are measured from
   the reference genotype (all effects zero), where new populations start
   unless `init_sd > 0`.
 * **Architectures**:
-  * `additive()`: `x = Σ Y_l`.
-  * `multilinear()`: `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a
-    `traits × traits × traits` tensor `ε` shared by all pairs of loci
+  * `additive()`: $x = \sum_l Y_l$.
+  * `multilinear()`: $x = S + \sum_{i<j} \varepsilon(Y_i, Y_j)$ with $S = \sum_l Y_l$ and a
+    traits × traits × traits tensor $\varepsilon$ shared by all pairs of loci
     (Hansen & Wagner 2001; `random_epsilon()`), or a different tensor for
     every pair of loci (Jones, Bürger & Arnold 2014; `pairwise_epsilon()`).
-  * `contribution_matrix()`: the model of do O & Whitlock (2023), `x = C a`
-    with weight genes `a` and contribution genes `C` as separate loci, used
+  * `contribution_matrix()`: the model of do O & Whitlock (2023), $x = C a$
+    with weight genes $a$ and contribution genes $C$ as separate loci, used
     with `contribution_mutation()`.
   * `binary_b()`: the model of Melo & Marroig (2015). Each allele has a
-    scalar effect `y` and a column of a binary matrix `B` saying which traits
-    it affects, `x = B y`. Used with `binary_b_mutation()`, which mutates `y`
-    and the entries of `B` separately (`b_mutation = "random"` reproduces the
+    scalar effect $y$ and a column of a binary matrix $B$ saying which traits
+    it affects, $x = B y$. Used with `binary_b_mutation()`, which mutates $y$
+    and the entries of $B$ separately (`b_mutation = "random"` reproduces the
     B mutation of the published simulations, which changed entries at half
     the nominal rate).
 
   `local_effects()` gives each locus's effect in the background of the rest
   of the genome.
-* **Phenotypes**: `z = x + e`, `e ~ N(0, env_sd²)`.
+* **Phenotypes**: $z = x + e$, $e \sim N(0, \sigma_e^2 I)$ with $\sigma_e$ = `env_sd`.
 * **Life cycle**: discrete generations (`wright_fisher()`, the default) or
-  overlapping generations (`moran()`: a generation is `n` birth-death events,
+  overlapping generations (`moran()`: a generation is $n$ birth-death events,
   each replacing a random individual by the offspring of two parents drawn
   in proportion to fitness), or the life cycle of Jones et al.
   (`viability_selection()`: separate sexes, females mating with several
@@ -196,8 +196,8 @@ to get them locally.
 * **Mutation**: each allele mutates with probability `rate` per generation
   (`mutation()` adds a multivariate normal vector with covariance `cov`;
   `binary_b_mutation()` and `contribution_mutation()` have their own rates
-  for each kind of gene). A mutation replaces an allele's effect `e` by
-  `persistence * e + draw`; `persistence = 1` (default) is a random walk,
+  for each kind of gene). A mutation replaces an allele's effect $e$ by
+  $\rho\, e + \delta$, with $\rho$ = `persistence` and $\delta$ a fresh draw; `persistence = 1` (default) is a random walk,
   `0` the house of cards model (`hoc_mutation()`), for every architecture.
 * **Recombination**: loci are unlinked by default. `genetic_map(chromosomes,
   length)` places loci evenly along chromosomes (Haldane map function), and
@@ -208,12 +208,12 @@ to get them locally.
   generations, all traits together, independently, or in blocks; do O &
   Whitlock 2023).
 * **Each generation**: the optimum moves (directional and fluctuating
-  regimes), fitness `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed, and the
+  regimes), fitness $w = \exp(-\tfrac{1}{2} (z - \theta)^\top \Omega^{-1} (z - \theta))$ is computed, and the
   life cycle produces the next generation: with `wright_fisher()`, every
-  individual mutates and `n` offspring are produced from parents drawn with
-  probability proportional to fitness; with `moran()`, `n` birth-death
+  individual mutates and $n$ offspring are produced from parents drawn with
+  probability proportional to fitness; with `moran()`, $n$ birth-death
   events; with `viability_selection()`, matings, zygotes surviving with
-  probability `w`, and regulation back to `n`. Offspring inherit alleles
+  probability $w$, and regulation back to $n$. Offspring inherit alleles
   through the model's recombination.
 * **Random numbers** come from R's generator: `set.seed()` or `seed` makes
   runs reproducible, and continuing a population gives the same result as a

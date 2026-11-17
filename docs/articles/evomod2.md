@@ -24,10 +24,10 @@ library(evomod2)
 
 ## Models
 
-A genetic architecture says how genomes map to genotypic values `x`. In
-the **additive** architecture, each allele carries an effect vector with
-one value per trait, and `x` is the sum of the effect vectors of all
-alleles. Mutation adds a multivariate normal vector to an allele’s
+A genetic architecture says how genomes map to genotypic values \\x\\.
+In the **additive** architecture, each allele carries an effect vector
+with one value per trait, and \\x\\ is the sum of the effect vectors of
+all alleles. Mutation adds a multivariate normal vector to an allele’s
 effects.
 
 ``` r
@@ -48,8 +48,8 @@ model
 ```
 
 Generations are discrete by default; `life_cycle = moran()` gives
-overlapping generations, where each generation is `n` birth-death events
-(see
+overlapping generations, where each generation is \\n\\ birth-death
+events (see
 [`?life_cycles`](https://diogro.github.io/evomod2/reference/life_cycles.md)).
 Other architectures are
 [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md),
@@ -64,8 +64,12 @@ Loci recombine freely unless the model has a genetic map
 
 ## Selection regimes
 
-Fitness is Gaussian around an optimum `theta`, with covariance `omega`
-(larger `omega` means weaker selection):
+Fitness is Gaussian around an optimum \\\theta\\ (`theta`), with
+covariance \\\Omega\\ (`omega`; larger \\\Omega\\ means weaker
+selection):
+
+\\w(z) = \exp\left(-\tfrac{1}{2} (z - \theta)^\top \Omega^{-1} (z -
+\theta)\right)\\
 
 ``` r
 
@@ -179,7 +183,8 @@ the same result as running it in one.
 ## Genomes and G matrix statistics
 
 The current genomes are available as an array (rows x alleles x
-individuals; alleles `2l - 1` and `2l` are the two copies of locus `l`):
+individuals; alleles \\2l - 1\\ and \\2l\\ are the two copies of locus
+\\l\\):
 
 ``` r
 

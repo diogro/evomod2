@@ -21,7 +21,7 @@ Splits the G matrix of the current population into the G expected without
 associations between loci (\code{genic}) and the remainder (\code{ld}), due to linkage
 disequilibrium between loci and departures from Hardy-Weinberg. All
 matrices use the \code{n - 1} denominator of \code{\link[stats:cov]{stats::cov()}}, so
-\code{G = genic + ld}.
+\eqn{G = G_\mathrm{genic} + G_\mathrm{ld}}{G = genic + ld}.
 }
 \details{
 \itemize{

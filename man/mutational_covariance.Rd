@@ -22,7 +22,8 @@ directional epistasis);
 \item \code{expected_mutations}: expected number of mutation events per genome per
 generation;
 \item \code{M}: mutational (co)variance input per generation,
-\verb{expected_mutations * E[dx dx']};
+\eqn{\lambda\, E[\Delta x \Delta x^\top]}{expected_mutations * E[dx dx']}, with \eqn{\lambda}{lambda} =
+\code{expected_mutations};
 \item \code{effects}: the sampled effects (traits x n), if requested.
 }
 }

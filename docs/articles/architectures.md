@@ -21,13 +21,13 @@ locus. They differ in what an allele is and how loci combine:
 | Architecture | An allele is | Genotypic value | Mutation |
 |----|----|----|----|
 | [`additive()`](https://diogro.github.io/evomod2/reference/architectures.md) | an effect vector, one value per trait | sum over loci | [`mutation()`](https://diogro.github.io/evomod2/reference/mutation.md): adds a multivariate normal vector |
-| [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md) | a scalar effect `y` and a 0/1 column of `B` | `B y` | [`binary_b_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md): changes `y`, flips entries of `B` |
-| [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md) | an effect vector | sum over loci plus pairwise interactions `ε(Y_i, Y_j)` | [`mutation()`](https://diogro.github.io/evomod2/reference/mutation.md) |
+| [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md) | a scalar effect \\y\\ and a 0/1 column of \\B\\ | \\B y\\ | [`binary_b_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md): changes `y`, flips entries of \\B\\ |
+| [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md) | an effect vector | sum over loci plus pairwise interactions \\\varepsilon(Y_i, Y_j)\\ | [`mutation()`](https://diogro.github.io/evomod2/reference/mutation.md) |
 
 In
 [`binary_b()`](https://diogro.github.io/evomod2/reference/architectures.md)
-an allele affects the traits marked in its column of `B`, all by the
-same amount, and `B` mutates, so the pattern of pleiotropy itself can
+an allele affects the traits marked in its column of \\B\\, all by the
+same amount, and \\B\\ mutates, so the pattern of pleiotropy itself can
 evolve. In
 [`additive()`](https://diogro.github.io/evomod2/reference/architectures.md)
 every allele affects every trait with independent effects.
@@ -90,11 +90,11 @@ legend("topleft", c("within module 1", "within module 2", "between"),
 par(op)
 ```
 
-With a binary `B`, alleles affecting several traits create correlations,
-and selection can change which traits alleles affect. (These are single
-populations, so the traces are noisy.) In the additive model,
-correlations only appear as selection enriches alleles whose effects on
-the selected traits point the same way.
+With a binary \\B\\, alleles affecting several traits create
+correlations, and selection can change which traits alleles affect.
+(These are single populations, so the traces are noisy.) In the additive
+model, correlations only appear as selection enriches alleles whose
+effects on the selected traits point the same way.
 `inst/examples/corridor_selection.R` runs this comparison with 20
 replicates.
 
@@ -102,9 +102,9 @@ replicates.
 
 With multilinear epistasis the effect of an allele depends on the
 genetic background. Positive directional epistasis (here
-`ε[1, 1, 1] > 0`) makes substitutions in trait 1 larger as the
-population moves in the positive direction, so additive variance grows
-under directional selection; negative epistasis shrinks it:
+\\\varepsilon\_{111} \> 0\\) makes substitutions in trait 1 larger as
+the population moves in the positive direction, so additive variance
+grows under directional selection; negative epistasis shrinks it:
 
 ``` r
 
@@ -136,9 +136,9 @@ legend("topleft", names(epistasis), col = c("#0072B2", "grey40", "#D55E00"), lty
 gives the effect of each locus in the background of the rest of the
 genome. After the population has moved in the positive direction of
 trait 1, positive epistasis amplifies every locus effect on trait 1 (by
-about `1 + ε S`, where `S` is the sum of the other locus effects), so
-local effects lie on a line steeper than 1 when plotted against the
-reference effects:
+about \\1 + \varepsilon S\\, where \\S\\ is the sum of the other locus
+effects), so local effects lie on a line steeper than 1 when plotted
+against the reference effects:
 
 ``` r
 
@@ -226,11 +226,12 @@ there is epistasis.
 [`mutational_covariance()`](https://diogro.github.io/evomod2/reference/mutational_covariance.md)
 applies single mutations to genomes of the population and measures their
 effects. In the additive model the covariance of the effects of one
-mutation is the mutational covariance of the model (`0.05^2` here); with
-positive directional epistasis, after the population moved in the
-positive direction of trait 1, a mutation of size `d` at trait 1 changes
-the trait by `d (1 + ε (S - Y_l))`, so mutational effects are larger
-(their mean stays zero, because the map is linear in each locus):
+mutation is the mutational covariance of the model (\\0.05^2\\ here);
+with positive directional epistasis, after the population moved in the
+positive direction of trait 1, a mutation of size \\d\\ at trait 1
+changes the trait by \\d\\(1 + \varepsilon (S - Y_l))\\, so mutational
+effects are larger (their mean stays zero, because the map is linear in
+each locus):
 
 ``` r
 

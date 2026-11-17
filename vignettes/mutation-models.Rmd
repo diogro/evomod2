@@ -16,11 +16,12 @@ library(evomod2)
 ```
 
 Every mutation model in evomod2 has a `persistence` parameter: a mutation
-replaces an allele's effect `e` by
+replaces an allele's effect $e$ by
 
-    persistence * e + draw
+$$e' = \rho\, e + \delta,$$
 
-where the draw comes from the model's mutational distribution.
+where $\rho$ is `persistence` and the draw $\delta$ comes from the model's
+mutational distribution.
 
 * `persistence = 1` (the default) is a **random walk**: mutational effects add
   up, a new allele resembles its parent, and effects can wander arbitrarily
@@ -33,7 +34,7 @@ where the draw comes from the model's mutational distribution.
   (Zeng & Cockerham 1993).
 
 `persistence` works with every architecture: it applies to the effect vectors
-of `additive()` and `multilinear()`, to `y` in `binary_b()` (entries of `B`
+of `additive()` and `multilinear()`, to $y$ in `binary_b()` (entries of $B$
 still flip), and to the weight and contribution genes of
 `contribution_matrix()`.
 
@@ -51,11 +52,11 @@ Without selection, both models reach a balance between mutation and drift
 within a population, but a different one. Two allele copies differ by the
 mutations on their lineages since their common ancestor. Under a random walk
 these add up, so the genic variance grows in proportion to
-`θ = 4 N_e μ` (`L s^2 θ` for `L` loci and mutational standard deviation `s`;
-Lande 1976); under the house of cards model only whether a mutation happened
-matters, so the variance saturates at `2 L s^2` (`2 L s^2 θ / (1 + θ)`).
-`N_e = n` for the default Wright-Fisher life cycle (about `n / 2` with
-`moran()`):
+$\vartheta = 4 N_e \mu$ ($L s^2 \vartheta$ for $L$ loci and mutational standard
+deviation $s$; Lande 1976); under the house of cards model only whether a
+mutation happened matters, so the variance saturates at $2 L s^2$
+($2 L s^2 \vartheta / (1 + \vartheta)$). $N_e = n$ for the default
+Wright-Fisher life cycle (about $n / 2$ with `moran()`):
 
 ```{r}
 n <- 200; loci <- 50; s <- 0.5

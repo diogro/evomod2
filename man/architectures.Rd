@@ -55,34 +55,36 @@ An \code{evomod_architecture} object.
 }
 \description{
 An architecture maps a genome to genotypic values. Genomes are matrices of
-allelic effect vectors (traits x alleles); alleles \verb{2l - 1} and \verb{2l} belong
-to locus \code{l}, and the effect of a locus is the sum of its two alleles
-(\code{Y_l}). Effects are measured from the reference genotype, where all
+allelic effect vectors (traits x alleles); alleles \eqn{2l - 1}{2l - 1} and
+\eqn{2l}{2l} belong to locus \eqn{l}{l}, and the effect of a locus is the sum
+of its two alleles (\eqn{Y_l}{Y_l}). Effects are measured from the reference genotype, where all
 effects are zero.
 }
 \details{
 \itemize{
-\item \code{additive()}: \verb{x = sum_l Y_l}.
+\item \code{additive()}: \eqn{x = \sum_l Y_l}{x = sum_l Y_l}.
 \item \code{binary_b()}: the binary ontogenetic matrix model of Melo & Marroig
-(2015). Each allele has a scalar effect \code{y} and a column of a binary
-matrix \code{B} saying which traits it affects; \verb{x = B y}. Use with
-\code{\link[=binary_b_mutation]{binary_b_mutation()}}. Genomes have \code{traits + 1} rows: \code{y}, then \code{B}.
+(2015). Each allele has a scalar effect \eqn{y}{y} and a column of a binary
+matrix \eqn{B}{B} saying which traits it affects; \eqn{x = B y}{x = B y}. Use with
+\code{\link[=binary_b_mutation]{binary_b_mutation()}}. Genomes have \code{traits + 1} rows: \eqn{y}{y}, then \eqn{B}{B}.
 \item \code{contribution_matrix()}: the model of do O & Whitlock (2023). \code{genes}
-weight genes \code{a_j} and a \verb{traits x genes} matrix of contribution genes
-\code{c_ij}, each its own locus with a scalar value (the two alleles of a
-locus are summed); \verb{x_i = sum_j c_ij a_j}. Pleiotropy (\code{C}) evolves
+weight genes \eqn{a_j}{a_j} and a \verb{traits x genes} matrix of contribution
+genes \eqn{c_{ij}}{c_ij}, each its own locus with a scalar value (the two alleles of a
+locus are summed); \eqn{x_i = \sum_j c_{ij} a_j}{x_i = sum_j c_ij a_j}. Pleiotropy
+(\eqn{C}{C}) evolves
 continuously and can be negative, and the map is bilinear (epistasis
 between weight and contribution genes). Loci \verb{1..genes} are the weight
-genes; locus \code{genes + (j - 1) * traits + i} is \code{c_ij}. Use with
+genes; locus \code{genes + (j - 1) * traits + i} is \eqn{c_{ij}}{c_ij}. Use with
 \code{\link[=contribution_mutation]{contribution_mutation()}}. New populations start with every individual
 at \code{init_weights} and \code{init_contributions} (each allele half of the
 locus value), plus \code{Normal(0, init_sd)} noise on every allele.
 \item \code{multilinear()} with a pairwise \code{epsilon} (\code{\link[=pairwise_epsilon]{pairwise_epsilon()}}): a
 different tensor for every pair of loci (Jones, Burger & Arnold 2014),
-\verb{x = S + sum_\{i<j\} eps_ij(Y_i, Y_j)}.
+\eqn{x = S + \sum_{i<j} \varepsilon_{ij}(Y_i, Y_j)}{x = S + sum_{i<j} eps_ij(Y_i, Y_j)}.
 \item \code{multilinear()}: pairwise multilinear epistasis (Hansen & Wagner 2001),
-\verb{x = S + sum_\{i<j\} eps(Y_i, Y_j)}, with \verb{S = sum_l Y_l} and
-\verb{eps(a, b)[k] = sum_\{l,m\} epsilon[k, l, m] a[l] b[m]}. The same tensor is
+\eqn{x = S + \sum_{i<j} \varepsilon(Y_i, Y_j)}{x = S + sum_{i<j} eps(Y_i, Y_j)},
+with \eqn{S = \sum_l Y_l}{S = sum_l Y_l} and
+\eqn{\varepsilon(a, b)_k = \sum_{l,m} \varepsilon_{klm} a_l b_m}{eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]}. The same tensor is
 used for every pair of loci and must be symmetric in its last two indices.
 }
 }

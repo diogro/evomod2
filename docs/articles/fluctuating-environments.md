@@ -4,8 +4,8 @@ do O & Whitlock (2023, *Evolution Letters* 7: 457-466) simulated
 populations whose optimum jumps every few generations, either for all
 traits together (correlated change) or for each trait on its own
 (independent change), with a genotype-phenotype map that lets pleiotropy
-evolve: weight genes `a` and a matrix of contribution genes `C`,
-`z = C a`. They concluded that
+evolve: weight genes \\a\\ and a matrix of contribution genes \\C\\, \\z
+= C a\\. They concluded that
 
 1.  correlated change gives more genetic covariance than independent
     change;
@@ -35,11 +35,11 @@ the results of a run stored in the package. The script
 
 The scales follow do O & Whitlock: four traits, 1000 individuals, 5000
 generations; every 10 generations the optimum moves by 0.2 up or down,
-within \[-1, 1\]; `omega = I`; no environmental noise; 0.01 mutations
-per individual per generation, of standard deviation 0.5 (the value used
-in their code, which the paper describes as a variance). The other
-architectures have 20 loci, like their 20 genes, and the same mutational
-input.
+within \\\[-1, 1\]\\; \\\Omega = I\\; no environmental noise; 0.01
+mutations per individual per generation, of standard deviation 0.5 (the
+value used in their code, which the paper describes as a variance). The
+other architectures have 20 loci, like their 20 genes, and the same
+mutational input.
 
 ``` r
 
@@ -65,9 +65,9 @@ Statistics are averaged over the last 500 generations:
   new mutations in the evolved population
   ([`mutational_covariance()`](https://diogro.github.io/evomod2/reference/mutational_covariance.md));
 - **fitness in each environment**: the evolved population, with
-  pleiotropy frozen (no mutations of `C` or `B`), is moved to each kind
-  of environment for 2000 generations with an unbounded optimum, and its
-  mean fitness is averaged over the last 200.
+  pleiotropy frozen (no mutations of \\C\\ or \\B\\), is moved to each
+  kind of environment for 2000 generations with an unbounded optimum,
+  and its mean fitness is averaged over the last 200.
 
 ## 1. Correlated change and genetic covariance
 

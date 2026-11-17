@@ -66,8 +66,8 @@ An `evomod_regime` object.
 - `drift()`: no selection.
 
 - `stabilizing()`: Gaussian fitness surface with optimum `theta` and
-  covariance `omega`,
-  `w(z) = exp(-(z - theta)' omega^-1 (z - theta) / 2)`.
+  covariance `omega`, \$\$w(z) = \exp\left(-\frac{1}{2} (z -
+  \theta)^\top \Omega^{-1} (z - \theta)\right).\$\$
 
 - `directional()`: as stabilizing, but the optimum moves by
   `delta_theta` every generation (before selection).

@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Individual-Based Simulations of the Evolution of Genetic Architecture • evomod2</title>
-<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -173,32 +179,32 @@
 </h3>
 <ul>
 <li>
-<strong>Genomes</strong>: each allele carries an effect vector in trait space; the effect of a locus, <code>Y_l</code>, is the sum of its two alleles. Effects are measured from the reference genotype (all effects zero), where new populations start unless <code>init_sd &gt; 0</code>.</li>
+<strong>Genomes</strong>: each allele carries an effect vector in trait space; the effect of a locus, <span class="math inline">\(Y_l\)</span>, is the sum of its two alleles. Effects are measured from the reference genotype (all effects zero), where new populations start unless <code>init_sd &gt; 0</code>.</li>
 <li>
 <strong>Architectures</strong>:
 <ul>
 <li>
-<code><a href="reference/architectures.html">additive()</a></code>: <code>x = Σ Y_l</code>.</li>
+<code><a href="reference/architectures.html">additive()</a></code>: <span class="math inline">\(x = \sum_l Y_l\)</span>.</li>
 <li>
-<code><a href="reference/architectures.html">multilinear()</a></code>: <code>x = S + Σ_{i&lt;j} ε(Y_i, Y_j)</code> with <code>S = Σ Y_l</code> and a <code>traits × traits × traits</code> tensor <code>ε</code> shared by all pairs of loci (Hansen &amp; Wagner 2001; <code><a href="reference/random_epsilon.html">random_epsilon()</a></code>), or a different tensor for every pair of loci (Jones, Bürger &amp; Arnold 2014; <code><a href="reference/pairwise_epsilon.html">pairwise_epsilon()</a></code>).</li>
+<code><a href="reference/architectures.html">multilinear()</a></code>: <span class="math inline">\(x = S + \sum_{i&lt;j} \varepsilon(Y_i, Y_j)\)</span> with <span class="math inline">\(S = \sum_l Y_l\)</span> and a traits × traits × traits tensor <span class="math inline">\(\varepsilon\)</span> shared by all pairs of loci (Hansen &amp; Wagner 2001; <code><a href="reference/random_epsilon.html">random_epsilon()</a></code>), or a different tensor for every pair of loci (Jones, Bürger &amp; Arnold 2014; <code><a href="reference/pairwise_epsilon.html">pairwise_epsilon()</a></code>).</li>
 <li>
-<code><a href="reference/architectures.html">contribution_matrix()</a></code>: the model of do O &amp; Whitlock (2023), <code>x = C a</code> with weight genes <code>a</code> and contribution genes <code>C</code> as separate loci, used with <code><a href="reference/mutation.html">contribution_mutation()</a></code>.</li>
+<code><a href="reference/architectures.html">contribution_matrix()</a></code>: the model of do O &amp; Whitlock (2023), <span class="math inline">\(x = C a\)</span> with weight genes <span class="math inline">\(a\)</span> and contribution genes <span class="math inline">\(C\)</span> as separate loci, used with <code><a href="reference/mutation.html">contribution_mutation()</a></code>.</li>
 <li>
-<code><a href="reference/architectures.html">binary_b()</a></code>: the model of Melo &amp; Marroig (2015). Each allele has a scalar effect <code>y</code> and a column of a binary matrix <code>B</code> saying which traits it affects, <code>x = B y</code>. Used with <code><a href="reference/mutation.html">binary_b_mutation()</a></code>, which mutates <code>y</code> and the entries of <code>B</code> separately (<code>b_mutation = "random"</code> reproduces the B mutation of the published simulations, which changed entries at half the nominal rate).</li>
+<code><a href="reference/architectures.html">binary_b()</a></code>: the model of Melo &amp; Marroig (2015). Each allele has a scalar effect <span class="math inline">\(y\)</span> and a column of a binary matrix <span class="math inline">\(B\)</span> saying which traits it affects, <span class="math inline">\(x = B y\)</span>. Used with <code><a href="reference/mutation.html">binary_b_mutation()</a></code>, which mutates <span class="math inline">\(y\)</span> and the entries of <span class="math inline">\(B\)</span> separately (<code>b_mutation = "random"</code> reproduces the B mutation of the published simulations, which changed entries at half the nominal rate).</li>
 </ul>
 <code><a href="reference/genomes.html">local_effects()</a></code> gives each locus’s effect in the background of the rest of the genome.</li>
 <li>
-<strong>Phenotypes</strong>: <code>z = x + e</code>, <code>e ~ N(0, env_sd²)</code>.</li>
+<strong>Phenotypes</strong>: <span class="math inline">\(z = x + e\)</span>, <span class="math inline">\(e \sim N(0, \sigma_e^2 I)\)</span> with <span class="math inline">\(\sigma_e\)</span> = <code>env_sd</code>.</li>
 <li>
-<strong>Life cycle</strong>: discrete generations (<code><a href="reference/life_cycles.html">wright_fisher()</a></code>, the default) or overlapping generations (<code><a href="reference/life_cycles.html">moran()</a></code>: a generation is <code>n</code> birth-death events, each replacing a random individual by the offspring of two parents drawn in proportion to fitness), or the life cycle of Jones et al. (<code><a href="reference/life_cycles.html">viability_selection()</a></code>: separate sexes, females mating with several males, viability selection on zygotes); <code>evomod_model(..., life_cycle = moran())</code>.</li>
+<strong>Life cycle</strong>: discrete generations (<code><a href="reference/life_cycles.html">wright_fisher()</a></code>, the default) or overlapping generations (<code><a href="reference/life_cycles.html">moran()</a></code>: a generation is <span class="math inline">\(n\)</span> birth-death events, each replacing a random individual by the offspring of two parents drawn in proportion to fitness), or the life cycle of Jones et al. (<code><a href="reference/life_cycles.html">viability_selection()</a></code>: separate sexes, females mating with several males, viability selection on zygotes); <code>evomod_model(..., life_cycle = moran())</code>.</li>
 <li>
-<strong>Mutation</strong>: each allele mutates with probability <code>rate</code> per generation (<code><a href="reference/mutation.html">mutation()</a></code> adds a multivariate normal vector with covariance <code>cov</code>; <code><a href="reference/mutation.html">binary_b_mutation()</a></code> and <code><a href="reference/mutation.html">contribution_mutation()</a></code> have their own rates for each kind of gene). A mutation replaces an allele’s effect <code>e</code> by <code>persistence * e + draw</code>; <code>persistence = 1</code> (default) is a random walk, <code>0</code> the house of cards model (<code><a href="reference/mutation.html">hoc_mutation()</a></code>), for every architecture.</li>
+<strong>Mutation</strong>: each allele mutates with probability <code>rate</code> per generation (<code><a href="reference/mutation.html">mutation()</a></code> adds a multivariate normal vector with covariance <code>cov</code>; <code><a href="reference/mutation.html">binary_b_mutation()</a></code> and <code><a href="reference/mutation.html">contribution_mutation()</a></code> have their own rates for each kind of gene). A mutation replaces an allele’s effect <span class="math inline">\(e\)</span> by <span class="math inline">\(\rho\, e + \delta\)</span>, with <span class="math inline">\(\rho\)</span> = <code>persistence</code> and <span class="math inline">\(\delta\)</span> a fresh draw; <code>persistence = 1</code> (default) is a random walk, <code>0</code> the house of cards model (<code><a href="reference/mutation.html">hoc_mutation()</a></code>), for every architecture.</li>
 <li>
 <strong>Recombination</strong>: loci are unlinked by default. <code>genetic_map(chromosomes, length)</code> places loci evenly along chromosomes (Haldane map function), and <code>linkage(rates)</code> sets the recombination fraction between each pair of neighbouring loci; pass either as <code>evomod_model(..., recombination = )</code>.</li>
 <li>
 <strong>Regimes</strong>: <code><a href="reference/regimes.html">drift()</a></code>, <code><a href="reference/regimes.html">stabilizing()</a></code>, <code><a href="reference/regimes.html">directional()</a></code> (the optimum moves steadily) and <code><a href="reference/regimes.html">fluctuating()</a></code> (the optimum jumps up or down every few generations, all traits together, independently, or in blocks; do O &amp; Whitlock 2023).</li>
 <li>
-<strong>Each generation</strong>: the optimum moves (directional and fluctuating regimes), fitness <code>w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)</code> is computed, and the life cycle produces the next generation: with <code><a href="reference/life_cycles.html">wright_fisher()</a></code>, every individual mutates and <code>n</code> offspring are produced from parents drawn with probability proportional to fitness; with <code><a href="reference/life_cycles.html">moran()</a></code>, <code>n</code> birth-death events; with <code><a href="reference/life_cycles.html">viability_selection()</a></code>, matings, zygotes surviving with probability <code>w</code>, and regulation back to <code>n</code>. Offspring inherit alleles through the model’s recombination.</li>
+<strong>Each generation</strong>: the optimum moves (directional and fluctuating regimes), fitness <span class="math inline">\(w = \exp(-\tfrac{1}{2} (z - \theta)^\top \Omega^{-1} (z - \theta))\)</span> is computed, and the life cycle produces the next generation: with <code><a href="reference/life_cycles.html">wright_fisher()</a></code>, every individual mutates and <span class="math inline">\(n\)</span> offspring are produced from parents drawn with probability proportional to fitness; with <code><a href="reference/life_cycles.html">moran()</a></code>, <span class="math inline">\(n\)</span> birth-death events; with <code><a href="reference/life_cycles.html">viability_selection()</a></code>, matings, zygotes surviving with probability <span class="math inline">\(w\)</span>, and regulation back to <span class="math inline">\(n\)</span>. Offspring inherit alleles through the model’s recombination.</li>
 <li>
 <strong>Random numbers</strong> come from R’s generator: <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> or <code>seed</code> makes runs reproducible, and continuing a population gives the same result as a single run.</li>
 </ul>

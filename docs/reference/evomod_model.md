@@ -30,7 +30,7 @@ evomod_model(
 
 - env_sd:
 
-  standard deviation of environmental effects (`z = x + e`).
+  standard deviation of environmental effects \\e\\ in \\z = x + e\\.
 
 - init_sd:
 

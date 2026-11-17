@@ -43,8 +43,9 @@ A list with
 - `expected_mutations`: expected number of mutation events per genome
   per generation;
 
-- `M`: mutational (co)variance input per generation,
-  `expected_mutations * E[dx dx']`;
+- `M`: mutational (co)variance input per generation, \\\lambda\\
+  E\[\Delta x \Delta x^\top\]\\, with \\\lambda\\ =
+  `expected_mutations`;
 
 - `effects`: the sampled effects (traits x n), if requested.
 

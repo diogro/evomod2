@@ -147,7 +147,7 @@ check_genome_rows <- function(alleles, arch) {
 #' associations between loci (`genic`) and the remainder (`ld`), due to linkage
 #' disequilibrium between loci and departures from Hardy-Weinberg. All
 #' matrices use the `n - 1` denominator of [stats::cov()], so
-#' `G = genic + ld`.
+#' \eqn{G = G_\mathrm{genic} + G_\mathrm{ld}}{G = genic + ld}.
 #'
 #' * `method = "genic"` (exact; architectures where genotypic values are sums
 #'   of allele effects, [additive()] and [binary_b()]): twice the sum over loci
@@ -296,7 +296,8 @@ additive_covariance <- function(pop) {
 #'   * `expected_mutations`: expected number of mutation events per genome per
 #'     generation;
 #'   * `M`: mutational (co)variance input per generation,
-#'     `expected_mutations * E[dx dx']`;
+#'     \eqn{\lambda\, E[\Delta x \Delta x^\top]}{expected_mutations * E[dx dx']}, with \eqn{\lambda}{lambda} =
+#'     `expected_mutations`;
 #'   * `effects`: the sampled effects (traits x n), if requested.
 #' @examples
 #' model <- evomod_model(additive(loci = 20, traits = 2),

@@ -1,32 +1,34 @@
 #' Genetic architectures
 #'
 #' An architecture maps a genome to genotypic values. Genomes are matrices of
-#' allelic effect vectors (traits x alleles); alleles `2l - 1` and `2l` belong
-#' to locus `l`, and the effect of a locus is the sum of its two alleles
-#' (`Y_l`). Effects are measured from the reference genotype, where all
+#' allelic effect vectors (traits x alleles); alleles \eqn{2l - 1}{2l - 1} and
+#' \eqn{2l}{2l} belong to locus \eqn{l}{l}, and the effect of a locus is the sum
+#' of its two alleles (\eqn{Y_l}{Y_l}). Effects are measured from the reference genotype, where all
 #' effects are zero.
 #'
-#' * `additive()`: `x = sum_l Y_l`.
+#' * `additive()`: \eqn{x = \sum_l Y_l}{x = sum_l Y_l}.
 #' * `binary_b()`: the binary ontogenetic matrix model of Melo & Marroig
-#'   (2015). Each allele has a scalar effect `y` and a column of a binary
-#'   matrix `B` saying which traits it affects; `x = B y`. Use with
-#'   [binary_b_mutation()]. Genomes have `traits + 1` rows: `y`, then `B`.
+#'   (2015). Each allele has a scalar effect \eqn{y}{y} and a column of a binary
+#'   matrix \eqn{B}{B} saying which traits it affects; \eqn{x = B y}{x = B y}. Use with
+#'   [binary_b_mutation()]. Genomes have `traits + 1` rows: \eqn{y}{y}, then \eqn{B}{B}.
 #' * `contribution_matrix()`: the model of do O & Whitlock (2023). `genes`
-#'   weight genes `a_j` and a `traits x genes` matrix of contribution genes
-#'   `c_ij`, each its own locus with a scalar value (the two alleles of a
-#'   locus are summed); `x_i = sum_j c_ij a_j`. Pleiotropy (`C`) evolves
+#'   weight genes \eqn{a_j}{a_j} and a `traits x genes` matrix of contribution
+#'   genes \eqn{c_{ij}}{c_ij}, each its own locus with a scalar value (the two alleles of a
+#'   locus are summed); \eqn{x_i = \sum_j c_{ij} a_j}{x_i = sum_j c_ij a_j}. Pleiotropy
+#'   (\eqn{C}{C}) evolves
 #'   continuously and can be negative, and the map is bilinear (epistasis
 #'   between weight and contribution genes). Loci `1..genes` are the weight
-#'   genes; locus `genes + (j - 1) * traits + i` is `c_ij`. Use with
+#'   genes; locus `genes + (j - 1) * traits + i` is \eqn{c_{ij}}{c_ij}. Use with
 #'   [contribution_mutation()]. New populations start with every individual
 #'   at `init_weights` and `init_contributions` (each allele half of the
 #'   locus value), plus `Normal(0, init_sd)` noise on every allele.
 #' * `multilinear()` with a pairwise `epsilon` ([pairwise_epsilon()]): a
 #'   different tensor for every pair of loci (Jones, Burger & Arnold 2014),
-#'   `x = S + sum_{i<j} eps_ij(Y_i, Y_j)`.
+#'   \eqn{x = S + \sum_{i<j} \varepsilon_{ij}(Y_i, Y_j)}{x = S + sum_{i<j} eps_ij(Y_i, Y_j)}.
 #' * `multilinear()`: pairwise multilinear epistasis (Hansen & Wagner 2001),
-#'   `x = S + sum_{i<j} eps(Y_i, Y_j)`, with `S = sum_l Y_l` and
-#'   `eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]`. The same tensor is
+#'   \eqn{x = S + \sum_{i<j} \varepsilon(Y_i, Y_j)}{x = S + sum_{i<j} eps(Y_i, Y_j)},
+#'   with \eqn{S = \sum_l Y_l}{S = sum_l Y_l} and
+#'   \eqn{\varepsilon(a, b)_k = \sum_{l,m} \varepsilon_{klm} a_l b_m}{eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]}. The same tensor is
 #'   used for every pair of loci and must be symmetric in its last two indices.
 #'
 #' @param loci number of diploid loci.

@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Reproducing Jones, Bürger &amp; Arnold (2014) • evomod2</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -99,11 +105,12 @@ the package; the script <code>jones_burger_arnold_2014.R</code> in
 reference effect vector (the sum of its two alleles), and every pair of
 loci interacts through its own random tensor of epistatic coefficients,
 drawn once per run from a normal distribution with mean 0 and variance
-<code>σε²</code>:</p>
-<pre><code>x = Σ_i y_i + Σ_{i&lt;j} ε_ij(y_i, y_j)</code></pre>
+<span class="math inline">\(\sigma_\varepsilon^2\)</span>:</p>
+<p><span class="math display">\[x = \sum_i y_i + \sum_{i&lt;j}
+\varepsilon_{ij}(y_i, y_j)\]</span></p>
 <p>In evomod2 this is <code><a href="../reference/architectures.html">multilinear()</a></code> with coefficients from
 <code><a href="../reference/pairwise_epsilon.html">pairwise_epsilon()</a></code>:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://diogro.github.io/evomod2/">evomod2</a></span><span class="op">)</span></span>
 <span><span class="va">sigma2</span> <span class="op">&lt;-</span> <span class="fl">1</span>                       <span class="co"># variance of epistatic coefficients</span></span>
 <span><span class="va">r_omega</span> <span class="op">&lt;-</span> <span class="fl">0.9</span>                    <span class="co"># correlation of the selection surface</span></span>
@@ -116,20 +123,19 @@ drawn once per run from a normal distribution with mean 0 and variance
 <span><span class="fu"><a href="../reference/additive_covariance.html">additive_covariance</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span>          <span class="co"># G and its additive part</span></span>
 <span><span class="fu"><a href="../reference/mutational_covariance.html">mutational_covariance</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span>        <span class="co"># M: effects of single new mutations</span></span></code></pre></div>
 <p>Parameters follow their Table 1: mutational variance 0.05 per trait
-(no mutational correlation), <code>μ = 0.0005</code> per locus,
-<code>ω11 = ω22 = 49</code>, environmental variance 1,
-<code>N = 512</code>; each locus starts with five equally frequent
-alleles of small effect; 5000 generations of burn-in, then 5000 in which
-G, its additive part and M are measured 20 times and averaged; 20 runs
-per setting.</p>
+(no mutational correlation), <span class="math inline">\(\mu =
+0.0005\)</span> per locus, <span class="math inline">\(\omega_{11} =
+\omega_{22} = 49\)</span>, environmental variance 1, <span class="math inline">\(N = 512\)</span>; each locus starts with five
+equally frequent alleles of small effect; 5000 generations of burn-in,
+then 5000 in which G, its additive part and M are measured 20 times and
+averaged; 20 runs per setting.</p>
 <p>Two things can differ from their simulations:</p>
 <ul>
 <li>
 <strong>Reproduction.</strong> By default evomod2 draws parents in
 proportion to fitness each generation (<code><a href="../reference/life_cycles.html">wright_fisher()</a></code>).
 Their life cycle, in which each female mates with two males and has four
-offspring, followed by viability selection and regulation to
-<code>K</code> individuals, is available as
+offspring, followed by viability selection and regulation to <span class="math inline">\(K\)</span> individuals, is available as
 <code><a href="../reference/life_cycles.html">viability_selection()</a></code>; the results below use the default,
 and a later section repeats Tables 2 and 3 with their life cycle.</li>
 <li>
@@ -142,10 +148,10 @@ prediction of genotypic values from the loci.</li>
 <div class="section level2">
 <h2 id="epistasis-and-correlational-selection-their-table-2">Epistasis and correlational selection (their Table 2)<a class="anchor" aria-label="anchor" href="#epistasis-and-correlational-selection-their-table-2"></a>
 </h2>
-<p>Means over 20 runs, <code>N = 512</code>, for each variance of the
-epistatic coefficients (<code>sigma2</code>) and selective correlation
-(<code>r_omega</code>):</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>Means over 20 runs, <span class="math inline">\(N = 512\)</span>, for
+each variance of the epistatic coefficients (<span class="math inline">\(\sigma_\varepsilon^2\)</span>,
+<code>sigma2</code>) and selective correlation (<span class="math inline">\(r_\omega\)</span>, <code>r_omega</code>):</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t2</span> <span class="op">&lt;-</span> <span class="fu">avg</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">table2</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sigma2"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">t2</span>, digits <span class="op">=</span> <span class="fl">3</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
@@ -438,9 +444,8 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 </tr>
 </tbody>
 </table>
-<p>Published values for some of the same settings (their Table 2,
-<code>N = 512</code>):</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Published values for some of the same settings (their Table 2, <span class="math inline">\(N = 512\)</span>):</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">published2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  sigma2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span>,</span>
 <span>  r_omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.9</span>, <span class="fl">0</span>, <span class="fl">0.9</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.9</span>, <span class="fl">0</span>, <span class="fl">0.9</span><span class="op">)</span>,</span>
@@ -568,7 +573,7 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">table2</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">sigma2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">sigma2</span><span class="op">)</span></span>
 <span><span class="fu">ggplot</span><span class="op">(</span><span class="va">d</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">r_omega</span>, <span class="va">rM</span>, colour <span class="op">=</span> <span class="va">sigma2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -582,8 +587,8 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 <div class="section level2">
 <h2 id="population-size-their-table-3-and-fig--1">Population size (their Table 3 and Fig. 1)<a class="anchor" aria-label="anchor" href="#population-size-their-table-3-and-fig--1"></a>
 </h2>
-<p>Means over 20 runs, with <code>σε² = 1</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>Means over 20 runs, with <span class="math inline">\(\sigma_\varepsilon^2 = 1\)</span>:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t3</span> <span class="op">&lt;-</span> <span class="fu">avg</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">table3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">t3</span>, digits <span class="op">=</span> <span class="fl">3</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <table style="width:100%;" class="table">
@@ -876,8 +881,8 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 </tr>
 </tbody>
 </table>
-<p>Published values (their Table 3, <code>σε² = 1</code>):</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Published values (their Table 3, <span class="math inline">\(\sigma_\varepsilon^2 = 1\)</span>):</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">published3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">128</span>, <span class="fl">256</span>, <span class="fl">512</span>, <span class="fl">1024</span>, <span class="fl">2048</span>, <span class="fl">128</span>, <span class="fl">2048</span>, <span class="fl">128</span>, <span class="fl">2048</span>, <span class="fl">128</span>, <span class="fl">256</span>, <span class="fl">512</span>, <span class="fl">1024</span>, <span class="fl">2048</span><span class="op">)</span>,</span>
 <span>  r_omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.75</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -1013,7 +1018,7 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">table3</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">r_omega</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">r_omega</span><span class="op">)</span></span>
 <span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">d</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">]</span>, what <span class="op">=</span> <span class="st">"Mutational variance (M11)"</span>, value <span class="op">=</span> <span class="va">d</span><span class="op">$</span><span class="va">M11</span><span class="op">)</span>,</span>
@@ -1029,11 +1034,11 @@ epistatic coefficients (<code>sigma2</code>) and selective correlation
 <div class="section level2">
 <h2 id="alignment-of-m-g-and-omega-their-fig--2">Alignment of M, G and omega (their Fig. 2)<a class="anchor" aria-label="anchor" href="#alignment-of-m-g-and-omega-their-fig--2"></a>
 </h2>
-<p><code>N = 4096</code>, <code>σε² = 1</code>, and a selection surface
-with the shape of <code>r_omega = 0.9</code> rotated to a different
-orientation in each run. Angles between leading eigenvectors (0 means
-aligned, 90 perpendicular):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p><span class="math inline">\(N = 4096\)</span>, <span class="math inline">\(\sigma_\varepsilon^2 = 1\)</span>, and a selection
+surface with the shape of <span class="math inline">\(r_\omega =
+0.9\)</span> rotated to a different orientation in each run. Angles
+between leading eigenvectors (0 means aligned, 90 perpendicular):</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f2</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">fig2</span></span>
 <span><span class="va">angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>pair <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"G and omega"</span>, <span class="st">"M and omega"</span>, <span class="st">"M and G"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">f2</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                     angle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">f2</span><span class="op">$</span><span class="va">angle_G_omega</span>, <span class="va">f2</span><span class="op">$</span><span class="va">angle_M_omega</span>, <span class="va">f2</span><span class="op">$</span><span class="va">angle_M_G</span><span class="op">)</span><span class="op">)</span></span>
@@ -1042,7 +1047,7 @@ aligned, 90 perpendicular):</p>
 <span>  <span class="fu">geom_jitter</span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.1</span>, alpha <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"Angle between leading eigenvectors (degrees)"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="jones-burger-arnold-2014_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">f2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"angle_G_omega"</span>, <span class="st">"angle_M_omega"</span>, <span class="st">"angle_M_G"</span>, <span class="st">"G_ratio"</span>, <span class="st">"M_ratio"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  angle_G_omega    angle_M_omega       angle_M_G          G_ratio     </span></span>
 <span><span class="co">#&gt;  Min.   :0.1186   Min.   : 0.4632   Min.   : 0.2885   Min.   :1.965  </span></span>
@@ -1068,7 +1073,7 @@ largest to the smallest eigenvalue (elongation); omega has a ratio of
 <p>Ten loci, epistasis only within trait 1. For each locus: its mean
 reference effect on trait 1 in the evolved population, against the mean
 of its epistatic coefficients with the other loci:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f3</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">fig3</span></span>
 <span><span class="va">f3</span><span class="op">$</span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">f3</span><span class="op">$</span><span class="va">N</span><span class="op">)</span></span>
 <span><span class="fu">ggplot</span><span class="op">(</span><span class="va">f3</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">epistasis</span>, <span class="va">effect</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -1078,7 +1083,7 @@ of its epistatic coefficients with the other loci:</p>
 <span>  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span> <span class="va">N</span>, labeller <span class="op">=</span> <span class="va">label_both</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Mean epistatic coefficient of the locus"</span>, y <span class="op">=</span> <span class="st">"Mean reference effect on trait 1"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="jones-burger-arnold-2014_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">f3</span>, <span class="va">f3</span><span class="op">$</span><span class="va">N</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">effect</span> <span class="op">~</span> <span class="va">epistasis</span>, <span class="va">d</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">]</span>, R2 <span class="op">=</span> <span class="va">fit</span><span class="op">$</span><span class="va">r.squared</span>, p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="fl">4</span><span class="op">]</span><span class="op">)</span></span>
@@ -1087,11 +1092,12 @@ of its epistatic coefficients with the other loci:</p>
 <span><span class="co">#&gt; slope 0.165544547 -3.967660e-01</span></span>
 <span><span class="co">#&gt; R2    0.004751478  1.793379e-01</span></span>
 <span><span class="co">#&gt; p     0.332108814  4.159752e-10</span></span></code></pre></div>
-<p>Jones et al. report R² = 0.01 (p = 0.09) for <code>N = 128</code> and
-R² = 0.22 (p &lt;&lt; 0.0001) for <code>N = 2048</code>. Their exact
-definition of a locus’s allelic effect and epistatic coefficient is in
-their Supplementary Information; the one used here is described
-above.</p>
+<p>Jones et al. report <span class="math inline">\(R^2 = 0.01\)</span>
+(<span class="math inline">\(p = 0.09\)</span>) for <span class="math inline">\(N = 128\)</span> and <span class="math inline">\(R^2 = 0.22\)</span> (<span class="math inline">\(p
+\ll 0.0001\)</span>) for <span class="math inline">\(N = 2048\)</span>.
+Their exact definition of a locus’s allelic effect and epistatic
+coefficient is in their Supplementary Information; the one used here is
+described above.</p>
 </div>
 <div class="section level2">
 <h2 id="how-the-reproduction-compares">How the reproduction compares<a class="anchor" aria-label="anchor" href="#how-the-reproduction-compares"></a>
@@ -1101,21 +1107,27 @@ above.</p>
 <strong>Without epistasis M does not evolve</strong>: the mutational
 variances stay at the input value (0.05) and the mutational correlation
 at zero, whatever the selection surface, while G still follows omega
-(genetic correlation 0.43 at <code>r_omega = 0.9</code>; published
-0.42).</li>
+(genetic correlation 0.43 at <span class="math inline">\(r_\omega =
+0.9\)</span>; published 0.42).</li>
 <li>
 <strong>Epistasis inflates mutational variance</strong> (0.25 at
-<code>σε² = 1</code>, 0.52 at <code>σε² = 10</code>, with
-<code>r_omega = 0</code>; published 0.27 and 0.57), and
-<strong>correlational selection makes M correlated</strong> only when
-there is epistasis (<code>r_M</code> = 0.15 at <code>σε² = 1</code>,
-<code>r_omega = 0.9</code>; published 0.14).</li>
+<span class="math inline">\(\sigma_\varepsilon^2 = 1\)</span>, 0.52 at
+<span class="math inline">\(\sigma_\varepsilon^2 = 10\)</span>, with
+<span class="math inline">\(r_\omega = 0\)</span>; published 0.27 and
+0.57), and <strong>correlational selection makes M correlated</strong>
+only when there is epistasis (<span class="math inline">\(r_M =
+0.15\)</span> at <span class="math inline">\(\sigma_\varepsilon^2 =
+1\)</span>, <span class="math inline">\(r_\omega = 0.9\)</span>;
+published 0.14).</li>
 <li>
 <strong>Smaller populations evolve larger mutational
-variances</strong>: at <code>r_omega = 0.9</code>, M11 falls from 0.46
-at N = 128 to 0.09 at N = 2048 (published 0.43 and 0.10). The mutational
-correlation at large N is somewhat lower than published (0.13 at N =
-2048 against 0.18), and at N = 128 with <code>r_omega = 0.5</code> we
+variances</strong>: at <span class="math inline">\(r_\omega =
+0.9\)</span>, <span class="math inline">\(M_{11}\)</span> falls from
+0.46 at <span class="math inline">\(N = 128\)</span> to 0.09 at <span class="math inline">\(N = 2048\)</span> (published 0.43 and 0.10). The
+mutational correlation at large <span class="math inline">\(N\)</span>
+is somewhat lower than published (0.13 at <span class="math inline">\(N
+= 2048\)</span> against 0.18), and at <span class="math inline">\(N =
+128\)</span> with <span class="math inline">\(r_\omega = 0.5\)</span> we
 find none (0.00 against 0.11); see the comparison of life cycles
 below.</li>
 <li>
@@ -1125,9 +1137,9 @@ with G less elongated than omega and M less than G (eigenvalue ratios
 2.5 and 1.6, against 19).</li>
 <li>
 <strong>Large populations show the negative relationship between
-allelic effects and epistatic coefficients</strong> (R² = 0.18 at N =
-2048; published 0.22) and small populations do not (R² = 0.005 at N =
-128; published 0.01).</li>
+allelic effects and epistatic coefficients</strong> (<span class="math inline">\(R^2 = 0.18\)</span> at <span class="math inline">\(N = 2048\)</span>; published 0.22) and small
+populations do not (<span class="math inline">\(R^2 = 0.005\)</span> at
+<span class="math inline">\(N = 128\)</span>; published 0.01).</li>
 </ul>
 </div>
 <div class="section level2">
@@ -1135,14 +1147,13 @@ allelic effects and epistatic coefficients</strong> (R² = 0.18 at N =
 </h2>
 <p>Tables 2 and 3 repeated with
 <code>viability_selection(mates = 2, offspring_per_mate = 2)</code>,
-their life cycle. Its effective population size is about <code>n</code>,
-like Wright-Fisher (each female leaves on average two adult offspring
-with variance 1, each male two with variance 3, and with equal numbers
-of each sex this gives <code>N_e</code> close to <code>n</code>; the
-package tests check the neutral rate of drift), so the two life cycles
-should differ only in how selection acts: on zygotes before mating here,
-on parents in Wright-Fisher.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+their life cycle. Its effective population size is about <span class="math inline">\(n\)</span>, like Wright-Fisher (each female leaves
+on average two adult offspring with variance 1, each male two with
+variance 3, and with equal numbers of each sex this gives <span class="math inline">\(N_e\)</span> close to <span class="math inline">\(n\)</span>; the package tests check the neutral
+rate of drift), so the two life cycles should differ only in how
+selection acts: on zygotes before mating here, on parents in
+Wright-Fisher.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>life_cycle <span class="op">=</span> <span class="st">"Wright-Fisher"</span>, <span class="va">res</span><span class="op">$</span><span class="va">table3</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span>, <span class="st">"M11"</span>, <span class="st">"rM"</span>, <span class="st">"VA11"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>life_cycle <span class="op">=</span> <span class="st">"Viability selection"</span>, <span class="va">res</span><span class="op">$</span><span class="va">viability_table3</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span>, <span class="st">"M11"</span>, <span class="st">"rM"</span>, <span class="st">"VA11"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
@@ -1158,7 +1169,7 @@ on parents in Wright-Fisher.</p>
 <span>  <span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Population size"</span>, y <span class="op">=</span> <span class="st">"Mutational correlation (r_M)"</span>, colour <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">theme</span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="jones-burger-arnold-2014_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">v3</span> <span class="op">&lt;-</span> <span class="fu">avg</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">viability_table3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">keys</span> <span class="op">&lt;-</span> <span class="va">published3</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"N"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">keys</span>,</span>
@@ -1335,16 +1346,17 @@ on parents in Wright-Fisher.</p>
 across the 20 settings of Table 3, the mean mutational correlations
 differ by 0.023 on average, about the standard error of each mean
 (0.023). Their life cycle does not explain the remaining differences
-from the published values (at N = 2048 and <code>r_omega = 0.9</code>,
-<code>r_M</code> is 0.133 with Wright-Fisher and 0.150 with viability
-selection, against 0.177 published; at N = 128 and
-<code>r_omega = 0.5</code>, -0.002 and 0.023 against 0.109). Those
-differences are about as large as the variation among the published
-entries themselves: the same setting appears as 0.141 in their Table 2
-and 0.147 in Table 3, and at N = 128 their <code>r_M</code> is 0.109 for
-<code>r_omega = 0.5</code> but 0.029 for the stronger
-<code>r_omega = 0.75</code>.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+from the published values (at <span class="math inline">\(N =
+2048\)</span> and <span class="math inline">\(r_\omega = 0.9\)</span>,
+<span class="math inline">\(r_M\)</span> is 0.133 with Wright-Fisher and
+0.150 with viability selection, against 0.177 published; at <span class="math inline">\(N = 128\)</span> and <span class="math inline">\(r_\omega = 0.5\)</span>, -0.002 and 0.023 against
+0.109). Those differences are about as large as the variation among the
+published entries themselves: the same setting appears as 0.141 in their
+Table 2 and 0.147 in Table 3, and at <span class="math inline">\(N =
+128\)</span> their <span class="math inline">\(r_M\)</span> is 0.109 for
+<span class="math inline">\(r_\omega = 0.5\)</span> but 0.029 for the
+stronger <span class="math inline">\(r_\omega = 0.75\)</span>.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">v2</span> <span class="op">&lt;-</span> <span class="fu">avg</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">viability_table2</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sigma2"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">keys</span> <span class="op">&lt;-</span> <span class="va">published2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sigma2"</span>, <span class="st">"r_omega"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">keys</span>,</span>
@@ -1471,12 +1483,12 @@ and 0.147 in Table 3, and at N = 128 their <code>r_M</code> is 0.109 for
 <div class="section level2">
 <h2 id="running-it">Running it<a class="anchor" aria-label="anchor" href="#running-it"></a>
 </h2>
-<div class="sourceCode" id="cb16"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="va">script</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'cat(system.file("examples", "jones_burger_arnold_2014.R", package = "evomod2"))'</span><span class="va">)</span></span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> table2 1 0.9 1 results     <span class="co"># sigma_e^2, r_omega, replicate</span></span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> table3 512 0.9 1 results   <span class="co"># N, r_omega, replicate</span></span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> fig2 1 results</span>
-<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> fig3 2048 1 results</span>
-<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> summarise results jones_burger_arnold_2014.rds</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="va">script</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'cat(system.file("examples", "jones_burger_arnold_2014.R", package = "evomod2"))'</span><span class="va">)</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> table2 1 0.9 1 results     <span class="co"># sigma_e^2, r_omega, replicate</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> table3 512 0.9 1 results   <span class="co"># N, r_omega, replicate</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> fig2 1 results</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> fig3 2048 1 results</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="ex">Rscript</span> <span class="va">$script</span> summarise results jones_burger_arnold_2014.rds</span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

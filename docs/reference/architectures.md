@@ -1,10 +1,10 @@
 # Genetic architectures
 
 An architecture maps a genome to genotypic values. Genomes are matrices
-of allelic effect vectors (traits x alleles); alleles `2l - 1` and `2l`
-belong to locus `l`, and the effect of a locus is the sum of its two
-alleles (`Y_l`). Effects are measured from the reference genotype, where
-all effects are zero.
+of allelic effect vectors (traits x alleles); alleles \\2l - 1\\ and
+\\2l\\ belong to locus \\l\\, and the effect of a locus is the sum of
+its two alleles (\\Y_l\\). Effects are measured from the reference
+genotype, where all effects are zero.
 
 ## Usage
 
@@ -77,21 +77,22 @@ An `evomod_architecture` object.
 
 ## Details
 
-- `additive()`: `x = sum_l Y_l`.
+- `additive()`: \\x = \sum_l Y_l\\.
 
 - `binary_b()`: the binary ontogenetic matrix model of Melo & Marroig
-  (2015). Each allele has a scalar effect `y` and a column of a binary
-  matrix `B` saying which traits it affects; `x = B y`. Use with
+  (2015). Each allele has a scalar effect \\y\\ and a column of a binary
+  matrix \\B\\ saying which traits it affects; \\x = B y\\. Use with
   [`binary_b_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md).
-  Genomes have `traits + 1` rows: `y`, then `B`.
+  Genomes have `traits + 1` rows: \\y\\, then \\B\\.
 
 - `contribution_matrix()`: the model of do O & Whitlock (2023). `genes`
-  weight genes `a_j` and a `traits x genes` matrix of contribution genes
-  `c_ij`, each its own locus with a scalar value (the two alleles of a
-  locus are summed); `x_i = sum_j c_ij a_j`. Pleiotropy (`C`) evolves
-  continuously and can be negative, and the map is bilinear (epistasis
-  between weight and contribution genes). Loci `1..genes` are the weight
-  genes; locus `genes + (j - 1) * traits + i` is `c_ij`. Use with
+  weight genes \\a_j\\ and a `traits x genes` matrix of contribution
+  genes \\c\_{ij}\\, each its own locus with a scalar value (the two
+  alleles of a locus are summed); \\x_i = \sum_j c\_{ij} a_j\\.
+  Pleiotropy (\\C\\) evolves continuously and can be negative, and the
+  map is bilinear (epistasis between weight and contribution genes).
+  Loci `1..genes` are the weight genes; locus
+  `genes + (j - 1) * traits + i` is \\c\_{ij}\\. Use with
   [`contribution_mutation()`](https://diogro.github.io/evomod2/reference/mutation.md).
   New populations start with every individual at `init_weights` and
   `init_contributions` (each allele half of the locus value), plus
@@ -100,13 +101,13 @@ An `evomod_architecture` object.
 - `multilinear()` with a pairwise `epsilon`
   ([`pairwise_epsilon()`](https://diogro.github.io/evomod2/reference/pairwise_epsilon.md)):
   a different tensor for every pair of loci (Jones, Burger & Arnold
-  2014), `x = S + sum_{i<j} eps_ij(Y_i, Y_j)`.
+  2014), \\x = S + \sum\_{i\<j} \varepsilon\_{ij}(Y_i, Y_j)\\.
 
 - `multilinear()`: pairwise multilinear epistasis (Hansen & Wagner
-  2001), `x = S + sum_{i<j} eps(Y_i, Y_j)`, with `S = sum_l Y_l` and
-  `eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]`. The same tensor
-  is used for every pair of loci and must be symmetric in its last two
-  indices.
+  2001), \\x = S + \sum\_{i\<j} \varepsilon(Y_i, Y_j)\\, with \\S =
+  \sum_l Y_l\\ and \\\varepsilon(a, b)\_k = \sum\_{l,m}
+  \varepsilon\_{klm} a_l b_m\\. The same tensor is used for every pair
+  of loci and must be symmetric in its last two indices.
 
 ## Examples
 

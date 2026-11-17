@@ -26,9 +26,9 @@ Two traits are affected by 20 unlinked diploid loci. Each locus has a
 reference effect vector (the sum of its two alleles), and every pair of
 loci interacts through its own random tensor of epistatic coefficients,
 drawn once per run from a normal distribution with mean 0 and variance
-`σε²`:
+\\\sigma\_\varepsilon^2\\:
 
-    x = Σ_i y_i + Σ_{i<j} ε_ij(y_i, y_j)
+\\x = \sum_i y_i + \sum\_{i\<j} \varepsilon\_{ij}(y_i, y_j)\\
 
 In evomod2 this is
 [`multilinear()`](https://diogro.github.io/evomod2/reference/architectures.md)
@@ -51,11 +51,11 @@ mutational_covariance(pop)        # M: effects of single new mutations
 ```
 
 Parameters follow their Table 1: mutational variance 0.05 per trait (no
-mutational correlation), `μ = 0.0005` per locus, `ω11 = ω22 = 49`,
-environmental variance 1, `N = 512`; each locus starts with five equally
-frequent alleles of small effect; 5000 generations of burn-in, then 5000
-in which G, its additive part and M are measured 20 times and averaged;
-20 runs per setting.
+mutational correlation), \\\mu = 0.0005\\ per locus, \\\omega\_{11} =
+\omega\_{22} = 49\\, environmental variance 1, \\N = 512\\; each locus
+starts with five equally frequent alleles of small effect; 5000
+generations of burn-in, then 5000 in which G, its additive part and M
+are measured 20 times and averaged; 20 runs per setting.
 
 Two things can differ from their simulations:
 
@@ -63,8 +63,8 @@ Two things can differ from their simulations:
   fitness each generation
   ([`wright_fisher()`](https://diogro.github.io/evomod2/reference/life_cycles.md)).
   Their life cycle, in which each female mates with two males and has
-  four offspring, followed by viability selection and regulation to `K`
-  individuals, is available as
+  four offspring, followed by viability selection and regulation to
+  \\K\\ individuals, is available as
   [`viability_selection()`](https://diogro.github.io/evomod2/reference/life_cycles.md);
   the results below use the default, and a later section repeats Tables
   2 and 3 with their life cycle.
@@ -76,8 +76,9 @@ Two things can differ from their simulations:
 
 ## Epistasis and correlational selection (their Table 2)
 
-Means over 20 runs, `N = 512`, for each variance of the epistatic
-coefficients (`sigma2`) and selective correlation (`r_omega`):
+Means over 20 runs, \\N = 512\\, for each variance of the epistatic
+coefficients (\\\sigma\_\varepsilon^2\\, `sigma2`) and selective
+correlation (\\r\_\omega\\, `r_omega`):
 
 ``` r
 
@@ -108,8 +109,8 @@ knitr::kable(t2, digits = 3, row.names = FALSE)
 |   10.0 |    0.75 | 0.422 | 0.407 |  0.210 | 0.291 | 0.279 |  0.277 | 0.407 | 0.378 |  0.060 |
 |   10.0 |    0.90 | 0.242 | 0.235 |  0.296 | 0.175 | 0.170 |  0.374 | 0.309 | 0.296 |  0.079 |
 
-Published values for some of the same settings (their Table 2,
-`N = 512`):
+Published values for some of the same settings (their Table 2, \\N =
+512\\):
 
 ``` r
 
@@ -156,7 +157,7 @@ ggplot(d, aes(r_omega, rM, colour = sigma2)) +
 
 ## Population size (their Table 3 and Fig. 1)
 
-Means over 20 runs, with `σε² = 1`:
+Means over 20 runs, with \\\sigma\_\varepsilon^2 = 1\\:
 
 ``` r
 
@@ -187,7 +188,7 @@ knitr::kable(t3, digits = 3, row.names = FALSE)
 | 2048 |    0.75 | 0.403 | 0.420 |  0.278 | 0.251 | 0.265 |  0.418 | 0.111 | 0.113 |  0.141 |
 | 2048 |    0.90 | 0.257 | 0.259 |  0.349 | 0.183 | 0.185 |  0.479 | 0.093 | 0.098 |  0.133 |
 
-Published values (their Table 3, `σε² = 1`):
+Published values (their Table 3, \\\sigma\_\varepsilon^2 = 1\\):
 
 ``` r
 
@@ -239,9 +240,10 @@ ggplot(long, aes(N, value, colour = r_omega)) +
 
 ## Alignment of M, G and omega (their Fig. 2)
 
-`N = 4096`, `σε² = 1`, and a selection surface with the shape of
-`r_omega = 0.9` rotated to a different orientation in each run. Angles
-between leading eigenvectors (0 means aligned, 90 perpendicular):
+\\N = 4096\\, \\\sigma\_\varepsilon^2 = 1\\, and a selection surface
+with the shape of \\r\_\omega = 0.9\\ rotated to a different orientation
+in each run. Angles between leading eigenvectors (0 means aligned, 90
+perpendicular):
 
 ``` r
 
@@ -310,47 +312,49 @@ sapply(split(f3, f3$N), function(d) {
 #> p     0.332108814  4.159752e-10
 ```
 
-Jones et al. report R² = 0.01 (p = 0.09) for `N = 128` and R² = 0.22 (p
-\<\< 0.0001) for `N = 2048`. Their exact definition of a locus’s allelic
-effect and epistatic coefficient is in their Supplementary Information;
-the one used here is described above.
+Jones et al. report \\R^2 = 0.01\\ (\\p = 0.09\\) for \\N = 128\\ and
+\\R^2 = 0.22\\ (\\p \ll 0.0001\\) for \\N = 2048\\. Their exact
+definition of a locus’s allelic effect and epistatic coefficient is in
+their Supplementary Information; the one used here is described above.
 
 ## How the reproduction compares
 
 - **Without epistasis M does not evolve**: the mutational variances stay
   at the input value (0.05) and the mutational correlation at zero,
   whatever the selection surface, while G still follows omega (genetic
-  correlation 0.43 at `r_omega = 0.9`; published 0.42).
-- **Epistasis inflates mutational variance** (0.25 at `σε² = 1`, 0.52 at
-  `σε² = 10`, with `r_omega = 0`; published 0.27 and 0.57), and
-  **correlational selection makes M correlated** only when there is
-  epistasis (`r_M` = 0.15 at `σε² = 1`, `r_omega = 0.9`; published
-  0.14).
+  correlation 0.43 at \\r\_\omega = 0.9\\; published 0.42).
+- **Epistasis inflates mutational variance** (0.25 at
+  \\\sigma\_\varepsilon^2 = 1\\, 0.52 at \\\sigma\_\varepsilon^2 = 10\\,
+  with \\r\_\omega = 0\\; published 0.27 and 0.57), and **correlational
+  selection makes M correlated** only when there is epistasis (\\r_M =
+  0.15\\ at \\\sigma\_\varepsilon^2 = 1\\, \\r\_\omega = 0.9\\;
+  published 0.14).
 - **Smaller populations evolve larger mutational variances**: at
-  `r_omega = 0.9`, M11 falls from 0.46 at N = 128 to 0.09 at N = 2048
-  (published 0.43 and 0.10). The mutational correlation at large N is
-  somewhat lower than published (0.13 at N = 2048 against 0.18), and at
-  N = 128 with `r_omega = 0.5` we find none (0.00 against 0.11); see the
-  comparison of life cycles below.
+  \\r\_\omega = 0.9\\, \\M\_{11}\\ falls from 0.46 at \\N = 128\\ to
+  0.09 at \\N = 2048\\ (published 0.43 and 0.10). The mutational
+  correlation at large \\N\\ is somewhat lower than published (0.13 at
+  \\N = 2048\\ against 0.18), and at \\N = 128\\ with \\r\_\omega =
+  0.5\\ we find none (0.00 against 0.11); see the comparison of life
+  cycles below.
 - **M, G and omega align**: median angles between leading eigenvectors
   of 2.4 degrees (G and omega) and 5.6 degrees (M and omega), with G
   less elongated than omega and M less than G (eigenvalue ratios 2.5 and
   1.6, against 19).
 - **Large populations show the negative relationship between allelic
-  effects and epistatic coefficients** (R² = 0.18 at N = 2048; published
-  0.22) and small populations do not (R² = 0.005 at N = 128; published
-  0.01).
+  effects and epistatic coefficients** (\\R^2 = 0.18\\ at \\N = 2048\\;
+  published 0.22) and small populations do not (\\R^2 = 0.005\\ at \\N =
+  128\\; published 0.01).
 
 ## Their life cycle
 
 Tables 2 and 3 repeated with
 `viability_selection(mates = 2, offspring_per_mate = 2)`, their life
-cycle. Its effective population size is about `n`, like Wright-Fisher
+cycle. Its effective population size is about \\n\\, like Wright-Fisher
 (each female leaves on average two adult offspring with variance 1, each
 male two with variance 3, and with equal numbers of each sex this gives
-`N_e` close to `n`; the package tests check the neutral rate of drift),
-so the two life cycles should differ only in how selection acts: on
-zygotes before mating here, on parents in Wright-Fisher.
+\\N_e\\ close to \\n\\; the package tests check the neutral rate of
+drift), so the two life cycles should differ only in how selection acts:
+on zygotes before mating here, on parents in Wright-Fisher.
 
 ``` r
 
@@ -405,13 +409,14 @@ The two life cycles give the same results within sampling error: across
 the 20 settings of Table 3, the mean mutational correlations differ by
 0.023 on average, about the standard error of each mean (0.023). Their
 life cycle does not explain the remaining differences from the published
-values (at N = 2048 and `r_omega = 0.9`, `r_M` is 0.133 with
+values (at \\N = 2048\\ and \\r\_\omega = 0.9\\, \\r_M\\ is 0.133 with
 Wright-Fisher and 0.150 with viability selection, against 0.177
-published; at N = 128 and `r_omega = 0.5`, -0.002 and 0.023 against
-0.109). Those differences are about as large as the variation among the
-published entries themselves: the same setting appears as 0.141 in their
-Table 2 and 0.147 in Table 3, and at N = 128 their `r_M` is 0.109 for
-`r_omega = 0.5` but 0.029 for the stronger `r_omega = 0.75`.
+published; at \\N = 128\\ and \\r\_\omega = 0.5\\, -0.002 and 0.023
+against 0.109). Those differences are about as large as the variation
+among the published entries themselves: the same setting appears as
+0.141 in their Table 2 and 0.147 in Table 3, and at \\N = 128\\ their
+\\r_M\\ is 0.109 for \\r\_\omega = 0.5\\ but 0.029 for the stronger
+\\r\_\omega = 0.75\\.
 
 ``` r
 

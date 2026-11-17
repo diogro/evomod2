@@ -6,7 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Getting started with evomod2 • evomod2</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -91,11 +97,11 @@ of Melo &amp; Marroig (2015)
 <div class="section level2">
 <h2 id="models">Models<a class="anchor" aria-label="anchor" href="#models"></a>
 </h2>
-<p>A genetic architecture says how genomes map to genotypic values
-<code>x</code>. In the <strong>additive</strong> architecture, each
-allele carries an effect vector with one value per trait, and
-<code>x</code> is the sum of the effect vectors of all alleles. Mutation
-adds a multivariate normal vector to an allele’s effects.</p>
+<p>A genetic architecture says how genomes map to genotypic values <span class="math inline">\(x\)</span>. In the <strong>additive</strong>
+architecture, each allele carries an effect vector with one value per
+trait, and <span class="math inline">\(x\)</span> is the sum of the
+effect vectors of all alleles. Mutation adds a multivariate normal
+vector to an allele’s effects.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/evomod_model.html">evomod_model</a></span><span class="op">(</span></span>
 <span>  architecture <span class="op">=</span> <span class="fu"><a href="../reference/architectures.html">additive</a></span><span class="op">(</span>loci <span class="op">=</span> <span class="fl">20</span>, traits <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
@@ -112,8 +118,8 @@ adds a multivariate normal vector to an allele’s effects.</p>
 <span><span class="co">#&gt;   env_sd:       0.8   init_sd: 0.1</span></span></code></pre></div>
 <p>Generations are discrete by default;
 <code>life_cycle = moran()</code> gives overlapping generations, where
-each generation is <code>n</code> birth-death events (see
-<code><a href="../reference/life_cycles.html">?life_cycles</a></code>). Other architectures are
+each generation is <span class="math inline">\(n\)</span> birth-death
+events (see <code><a href="../reference/life_cycles.html">?life_cycles</a></code>). Other architectures are
 <code><a href="../reference/architectures.html">binary_b()</a></code>, the binary ontogenetic matrix of the original
 evomod model (with <code><a href="../reference/mutation.html">binary_b_mutation()</a></code>), and
 <code><a href="../reference/architectures.html">multilinear()</a></code>, pairwise multilinear epistasis (see
@@ -123,9 +129,12 @@ a genetic map (<code><a href="../reference/recombination.html">?recombination</a
 <div class="section level2">
 <h2 id="selection-regimes">Selection regimes<a class="anchor" aria-label="anchor" href="#selection-regimes"></a>
 </h2>
-<p>Fitness is Gaussian around an optimum <code>theta</code>, with
-covariance <code>omega</code> (larger <code>omega</code> means weaker
-selection):</p>
+<p>Fitness is Gaussian around an optimum <span class="math inline">\(\theta\)</span> (<code>theta</code>), with
+covariance <span class="math inline">\(\Omega\)</span>
+(<code>omega</code>; larger <span class="math inline">\(\Omega\)</span>
+means weaker selection):</p>
+<p><span class="math display">\[w(z) = \exp\left(-\tfrac{1}{2} (z -
+\theta)^\top \Omega^{-1} (z - \theta)\right)\]</span></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">omega</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="va">regimes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -212,8 +221,9 @@ as running it in one.</p>
 <h2 id="genomes-and-g-matrix-statistics">Genomes and G matrix statistics<a class="anchor" aria-label="anchor" href="#genomes-and-g-matrix-statistics"></a>
 </h2>
 <p>The current genomes are available as an array (rows x alleles x
-individuals; alleles <code>2l - 1</code> and <code>2l</code> are the two
-copies of locus <code>l</code>):</p>
+individuals; alleles <span class="math inline">\(2l - 1\)</span> and
+<span class="math inline">\(2l\)</span> are the two copies of locus
+<span class="math inline">\(l\)</span>):</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="../reference/genomes.html">genomes</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]   4  40 300</span></span></code></pre></div>

@@ -18,7 +18,8 @@ evomod_model(
 
 \item{mutation}{a mutation model matching the architecture, see \code{\link[=mutation]{mutation()}}.}
 
-\item{env_sd}{standard deviation of environmental effects (\code{z = x + e}).}
+\item{env_sd}{standard deviation of environmental effects \eqn{e}{e} in
+\eqn{z = x + e}{z = x + e}.}
 
 \item{init_sd}{standard deviation of allelic effects in a new population
 (\code{y} for \code{\link[=binary_b]{binary_b()}}); 0 (the default) starts every individual at the

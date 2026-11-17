@@ -30,11 +30,11 @@ They differ in what an allele is and how loci combine:
 | Architecture | An allele is | Genotypic value | Mutation |
 |---|---|---|---|
 | `additive()` | an effect vector, one value per trait | sum over loci | `mutation()`: adds a multivariate normal vector |
-| `binary_b()` | a scalar effect `y` and a 0/1 column of `B` | `B y` | `binary_b_mutation()`: changes `y`, flips entries of `B` |
-| `multilinear()` | an effect vector | sum over loci plus pairwise interactions `ε(Y_i, Y_j)` | `mutation()` |
+| `binary_b()` | a scalar effect $y$ and a 0/1 column of $B$ | $B y$ | `binary_b_mutation()`: changes `y`, flips entries of $B$ |
+| `multilinear()` | an effect vector | sum over loci plus pairwise interactions $\varepsilon(Y_i, Y_j)$ | `mutation()` |
 
-In `binary_b()` an allele affects the traits marked in its column of `B`, all
-by the same amount, and `B` mutates, so the pattern of pleiotropy itself can
+In `binary_b()` an allele affects the traits marked in its column of $B$, all
+by the same amount, and $B$ mutates, so the pattern of pleiotropy itself can
 evolve. In `additive()` every allele affects every trait with independent
 effects. `multilinear()` adds epistasis: the effect of a locus depends on the
 rest of the genome.
@@ -86,7 +86,7 @@ legend("topleft", c("within module 1", "within module 2", "between"),
 par(op)
 ```
 
-With a binary `B`, alleles affecting several traits create correlations, and
+With a binary $B$, alleles affecting several traits create correlations, and
 selection can change which traits alleles affect. (These are single
 populations, so the traces are noisy.) In the additive model,
 correlations only appear as selection enriches alleles whose effects on the
@@ -96,7 +96,7 @@ this comparison with 20 replicates.
 ## Multilinear epistasis
 
 With multilinear epistasis the effect of an allele depends on the genetic
-background. Positive directional epistasis (here `ε[1, 1, 1] > 0`) makes
+background. Positive directional epistasis (here $\varepsilon_{111} > 0$) makes
 substitutions in trait 1 larger as the population moves in the positive
 direction, so additive variance grows under directional selection; negative
 epistasis shrinks it:
@@ -127,7 +127,7 @@ legend("topleft", names(epistasis), col = c("#0072B2", "grey40", "#D55E00"), lty
 `local_effects()` gives the effect of each locus in the background of the
 rest of the genome. After the population has moved in the positive direction
 of trait 1, positive epistasis amplifies every locus effect on trait 1 (by
-about `1 + ε S`, where `S` is the sum of the other locus effects), so local
+about $1 + \varepsilon S$, where $S$ is the sum of the other locus effects), so local
 effects lie on a line steeper than 1 when plotted against the reference
 effects:
 
@@ -189,9 +189,9 @@ New mutations have effects that depend on the genetic background when there
 is epistasis. `mutational_covariance()` applies single mutations to genomes of
 the population and measures their effects. In the additive model the
 covariance of the effects of one mutation is the mutational covariance of the
-model (`0.05^2` here); with positive directional epistasis, after the
+model ($0.05^2$ here); with positive directional epistasis, after the
 population moved in the positive direction of trait 1, a mutation of size
-`d` at trait 1 changes the trait by `d (1 + ε (S - Y_l))`, so mutational
+$d$ at trait 1 changes the trait by $d\,(1 + \varepsilon (S - Y_l))$, so mutational
 effects are larger (their mean stays zero, because the map is linear in each
 locus):
 
