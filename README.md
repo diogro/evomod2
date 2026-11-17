@@ -5,9 +5,19 @@
 <!-- badges: end -->
 
 Individual-based simulations of the evolution of genetic architecture in
-multivariate quantitative traits, with additive, multilinear epistatic or
-binary ontogenetic matrix genotype-phenotype maps. The simulation engine is written in C++ (Rcpp +
-RcppArmadillo); everything is driven from R.
+multivariate quantitative traits. Genotype-phenotype maps can be additive,
+multilinear epistatic (one tensor shared by all pairs of loci, or one per
+pair), a binary ontogenetic matrix (Melo & Marroig 2015) or a contribution
+matrix (do O & Whitlock 2023); mutation can be a random walk or house of
+cards; loci can be unlinked or on a genetic map; populations can have
+discrete generations, overlapping generations or separate sexes with
+viability selection; and the optimum can be stable, move steadily or
+fluctuate. The analysis tools split G into its pleiotropic and linkage
+disequilibrium parts and its additive and epistatic parts, and measure the
+mutational covariance matrix M. The simulation engine is written in C++
+(Rcpp + RcppArmadillo); everything is driven from R.
+
+Documentation and articles: <https://diogro.github.io/evomod2/>.
 
 evomod2 extends the model of Melo & Marroig (2015, *PNAS*
 [10.1073/pnas.1322632112](https://doi.org/10.1073/pnas.1322632112)). The Julia
@@ -27,8 +37,9 @@ Windows).
 
 ## Usage
 
-A model combines a genetic architecture, a mutation model and environmental
-noise. A population then evolves through a list of selection regimes.
+A model combines a genetic architecture, a mutation model, environmental
+noise, recombination and a life cycle. A population then evolves through a
+list of selection regimes.
 
 ```r
 library(evomod2)
@@ -53,6 +64,18 @@ variances(pop)
 g_matrices(pop)           # G matrices by generation
 
 pop <- evolve(pop, stabilizing(500, omega = 20))   # continue the same population
+```
+
+The other components are chosen the same way, for example:
+
+```r
+evomod_model(
+  architecture = multilinear(20, 2, epsilon = pairwise_epsilon(20, 2, sd = 1)),  # one tensor per pair of loci
+  mutation = hoc_mutation(rate = 0.0005, cov = 0.2),          # house of cards
+  env_sd = 1,
+  recombination = genetic_map(chromosomes = 2, length = 0.5),
+  life_cycle = viability_selection(mates = 2, offspring_per_mate = 2))
+fluctuating(5000, every = 10, step = 0.2, omega = 1, structure = list(1:2, 3:4))
 ```
 
 ### Genic and linkage disequilibrium parts of G
@@ -82,6 +105,16 @@ associations between loci but keeps allele frequencies (as in do O & Whitlock
 g_decomposition(pop, method = "shuffle", shuffles = 20)
 ```
 
+### Additive and epistatic parts of G
+
+With epistasis, part of G is not additive. `additive_covariance()` estimates
+the additive genetic covariance by least squares, from the state of every
+locus, for any architecture; `G - additive` is the epistatic part:
+
+```r
+additive_covariance(pop)       # G, additive and nonadditive
+```
+
 ### Mutational covariance
 
 `mutational_covariance()` applies single mutations to genomes drawn from the
@@ -94,6 +127,13 @@ itself evolves:
 ```r
 mutational_covariance(pop, n = 10000)
 ```
+
+### Matrix statistics
+
+`avg_corr()` (average correlations within and between modules, and their
+ratio), `autonomy()` and `mean_autonomy()` (Hansen & Houle 2008),
+`eigen_variance()` (proportion of variance per principal component), and
+`mean_fitness()` and `local_effects()` for the population itself.
 
 ### Documentation
 
@@ -116,8 +156,9 @@ mutational_covariance(pop, n = 10000)
   `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`,
   `fluctuating_environments.R`, `jones_burger_arnold_2014.R`.
 
-Install with `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)`
-to get the vignettes.
+All of them are also on the website, <https://diogro.github.io/evomod2/>, or
+install with `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)`
+to get them locally.
 
 ### The model
 
@@ -129,7 +170,8 @@ to get the vignettes.
   * `additive()`: `x = Σ Y_l`.
   * `multilinear()`: `x = S + Σ_{i<j} ε(Y_i, Y_j)` with `S = Σ Y_l` and a
     `traits × traits × traits` tensor `ε` shared by all pairs of loci
-    (Hansen & Wagner 2001).
+    (Hansen & Wagner 2001; `random_epsilon()`), or a different tensor for
+    every pair of loci (Jones, Bürger & Arnold 2014; `pairwise_epsilon()`).
   * `contribution_matrix()`: the model of do O & Whitlock (2023), `x = C a`
     with weight genes `a` and contribution genes `C` as separate loci, used
     with `contribution_mutation()`.
@@ -149,7 +191,10 @@ to get the vignettes.
   in proportion to fitness), or the life cycle of Jones et al.
   (`viability_selection()`: separate sexes, females mating with several
   males, viability selection on zygotes); `evomod_model(..., life_cycle = moran())`.
-* **Mutation**: a mutation replaces an allele's effect `e` by
+* **Mutation**: each allele mutates with probability `rate` per generation
+  (`mutation()` adds a multivariate normal vector with covariance `cov`;
+  `binary_b_mutation()` and `contribution_mutation()` have their own rates
+  for each kind of gene). A mutation replaces an allele's effect `e` by
   `persistence * e + draw`; `persistence = 1` (default) is a random walk,
   `0` the house of cards model (`hoc_mutation()`), for every architecture.
 * **Recombination**: loci are unlinked by default. `genetic_map(chromosomes,
@@ -160,11 +205,14 @@ to get the vignettes.
   steadily) and `fluctuating()` (the optimum jumps up or down every few
   generations, all traits together, independently, or in blocks; do O &
   Whitlock 2023).
-* **Each generation**: the optimum moves (directional and fluctuating regimes), fitness
-  `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed, every individual mutates
-  (each allele with probability `rate`, adding a `N(0, cov)` vector), and `n`
-  offspring are produced from parents drawn with probability proportional to
-  fitness, with free recombination.
+* **Each generation**: the optimum moves (directional and fluctuating
+  regimes), fitness `w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)` is computed, and the
+  life cycle produces the next generation: with `wright_fisher()`, every
+  individual mutates and `n` offspring are produced from parents drawn with
+  probability proportional to fitness; with `moran()`, `n` birth-death
+  events; with `viability_selection()`, matings, zygotes surviving with
+  probability `w`, and regulation back to `n`. Offspring inherit alleles
+  through the model's recombination.
 * **Random numbers** come from R's generator: `set.seed()` or `seed` makes
   runs reproducible, and continuing a population gives the same result as a
   single run.
@@ -175,10 +223,13 @@ The engine is a set of C++ components declared in `src/evomod.h`:
 
 | Interface | Role | Implementations |
 |---|---|---|
-| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `BinaryB` |
-| `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation` |
+| `Architecture` | genome → genotypic value, local effects | `Additive`, `Multilinear`, `MultilinearPairwise`, `BinaryB`, `ContributionMatrix` |
+| `Mutation` | changes allelic effects | `GaussianMutation`, `BinaryBMutation`, `ContributionMutation` |
 | `Fitness` | phenotypes → log fitness | `GaussianFitness` |
 | `Recombination` | parents → offspring genome | `FreeRecombination`, `LinkageMap` |
+
+Regimes and life cycles are handled in the generation loop
+(`evolve_cpp()` in `src/simulate.cpp`).
 
 To add, for example, a new architecture:
 
@@ -195,6 +246,11 @@ To add, for example, a new architecture:
 4. Add tests in `tests/testthat/` (compare with an explicit, slow R version of
    the same map), and, for new models, prototype and cross-check against
    EvoMod.jl.
+
+[DEVELOPMENT.md](DEVELOPMENT.md) describes the generation loop, the
+interfaces, random numbers, building and testing in more detail, and
+[AGENTS.md](AGENTS.md) summarises how to use the package for AI coding
+agents.
 
 ## Validation
 

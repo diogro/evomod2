@@ -63,7 +63,8 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>Individual-based simulations of the evolution of genetic architecture in multivariate quantitative traits, with additive, multilinear epistatic or binary ontogenetic matrix genotype-phenotype maps. The simulation engine is written in C++ (Rcpp + RcppArmadillo); everything is driven from R.</p>
+<p>Individual-based simulations of the evolution of genetic architecture in multivariate quantitative traits. Genotype-phenotype maps can be additive, multilinear epistatic (one tensor shared by all pairs of loci, or one per pair), a binary ontogenetic matrix (Melo &amp; Marroig 2015) or a contribution matrix (do O &amp; Whitlock 2023); mutation can be a random walk or house of cards; loci can be unlinked or on a genetic map; populations can have discrete generations, overlapping generations or separate sexes with viability selection; and the optimum can be stable, move steadily or fluctuate. The analysis tools split G into its pleiotropic and linkage disequilibrium parts and its additive and epistatic parts, and measure the mutational covariance matrix M. The simulation engine is written in C++ (Rcpp + RcppArmadillo); everything is driven from R.</p>
+<p>Documentation and articles: <a href="https://diogro.github.io/evomod2/" class="uri">https://diogro.github.io/evomod2/</a>.</p>
 <p>evomod2 extends the model of Melo &amp; Marroig (2015, <em>PNAS</em> <a href="https://doi.org/10.1073/pnas.1322632112" class="external-link">10.1073/pnas.1322632112</a>). The Julia package <a href="https://github.com/diogro/evomod_julia" class="external-link">EvoMod.jl</a> is the reference implementation used for prototyping new models and for cross-checking this package.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -76,7 +77,7 @@
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>A model combines a genetic architecture, a mutation model and environmental noise. A population then evolves through a list of selection regimes.</p>
+<p>A model combines a genetic architecture, a mutation model, environmental noise, recombination and a life cycle. A population then evolves through a list of selection regimes.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://diogro.github.io/evomod2/">evomod2</a></span><span class="op">)</span></span>
 <span></span>
@@ -100,11 +101,20 @@
 <span><span class="fu"><a href="reference/statistics.html">g_matrices</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span>           <span class="co"># G matrices by generation</span></span>
 <span></span>
 <span><span class="va">pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/evolve.html">evolve</a></span><span class="op">(</span><span class="va">pop</span>, <span class="fu"><a href="reference/regimes.html">stabilizing</a></span><span class="op">(</span><span class="fl">500</span>, omega <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span>   <span class="co"># continue the same population</span></span></code></pre></div>
+<p>The other components are chosen the same way, for example:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/evomod_model.html">evomod_model</a></span><span class="op">(</span></span>
+<span>  architecture <span class="op">=</span> <span class="fu"><a href="reference/architectures.html">multilinear</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">2</span>, epsilon <span class="op">=</span> <span class="fu"><a href="reference/pairwise_epsilon.html">pairwise_epsilon</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,  <span class="co"># one tensor per pair of loci</span></span>
+<span>  mutation <span class="op">=</span> <span class="fu"><a href="reference/mutation.html">hoc_mutation</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.0005</span>, cov <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span>,          <span class="co"># house of cards</span></span>
+<span>  env_sd <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  recombination <span class="op">=</span> <span class="fu"><a href="reference/recombination.html">genetic_map</a></span><span class="op">(</span>chromosomes <span class="op">=</span> <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  life_cycle <span class="op">=</span> <span class="fu"><a href="reference/life_cycles.html">viability_selection</a></span><span class="op">(</span>mates <span class="op">=</span> <span class="fl">2</span>, offspring_per_mate <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/regimes.html">fluctuating</a></span><span class="op">(</span><span class="fl">5000</span>, every <span class="op">=</span> <span class="fl">10</span>, step <span class="op">=</span> <span class="fl">0.2</span>, omega <span class="op">=</span> <span class="fl">1</span>, structure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="genic-and-linkage-disequilibrium-parts-of-g">Genic and linkage disequilibrium parts of G<a class="anchor" aria-label="anchor" href="#genic-and-linkage-disequilibrium-parts-of-g"></a>
 </h3>
 <p>For architectures where genotypic values are sums of allele effects (<code><a href="reference/architectures.html">additive()</a></code>, <code><a href="reference/architectures.html">binary_b()</a></code>), G splits into a genic part, the G expected without linkage disequilibrium (twice the sum over loci of the covariance of allele effects), and the part due to linkage disequilibrium between loci:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/evomod_model.html">evomod_model</a></span><span class="op">(</span><span class="fu"><a href="reference/architectures.html">additive</a></span><span class="op">(</span>loci <span class="op">=</span> <span class="fl">50</span>, traits <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>, <span class="fu"><a href="reference/mutation.html">mutation</a></span><span class="op">(</span><span class="fl">0.0005</span>, <span class="fl">0.2</span><span class="op">)</span>, env_sd <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>                      recombination <span class="op">=</span> <span class="fu"><a href="reference/recombination.html">genetic_map</a></span><span class="op">(</span>chromosomes <span class="op">=</span> <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/evolve.html">evolve</a></span><span class="op">(</span><span class="va">model</span>, <span class="fu"><a href="reference/regimes.html">stabilizing</a></span><span class="op">(</span><span class="fl">2000</span>, omega <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">1000</span>, record_every <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -112,15 +122,27 @@
 <span><span class="fu"><a href="reference/statistics.html">g_matrices</a></span><span class="op">(</span><span class="va">pop</span>, <span class="st">"ld"</span><span class="op">)</span>          <span class="co"># the LD part at every recorded generation</span></span></code></pre></div>
 <p>Pleiotropy shows up in the genic part (one allele affecting several traits), while correlations built by selection between loci show up in the LD part.</p>
 <p>For any architecture, including <code><a href="reference/architectures.html">multilinear()</a></code>, the split can be estimated by shuffling alleles among individuals at each locus, which removes associations between loci but keeps allele frequencies (as in do O &amp; Whitlock 2023):</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/g_decomposition.html">g_decomposition</a></span><span class="op">(</span><span class="va">pop</span>, method <span class="op">=</span> <span class="st">"shuffle"</span>, shuffles <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="additive-and-epistatic-parts-of-g">Additive and epistatic parts of G<a class="anchor" aria-label="anchor" href="#additive-and-epistatic-parts-of-g"></a>
+</h3>
+<p>With epistasis, part of G is not additive. <code><a href="reference/additive_covariance.html">additive_covariance()</a></code> estimates the additive genetic covariance by least squares, from the state of every locus, for any architecture; <code>G - additive</code> is the epistatic part:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/additive_covariance.html">additive_covariance</a></span><span class="op">(</span><span class="va">pop</span><span class="op">)</span>       <span class="co"># G, additive and nonadditive</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="mutational-covariance">Mutational covariance<a class="anchor" aria-label="anchor" href="#mutational-covariance"></a>
 </h3>
 <p><code><a href="reference/mutational_covariance.html">mutational_covariance()</a></code> applies single mutations to genomes drawn from the population and measures their effects on genotypic values. It returns the mean effect, the covariance of the effects of one mutation, and the mutational (co)variance input per generation, <code>M</code>. With epistasis or a binary B matrix, mutational effects depend on the genetic background, so <code>M</code> itself evolves:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/mutational_covariance.html">mutational_covariance</a></span><span class="op">(</span><span class="va">pop</span>, n <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="matrix-statistics">Matrix statistics<a class="anchor" aria-label="anchor" href="#matrix-statistics"></a>
+</h3>
+<p><code><a href="reference/avg_corr.html">avg_corr()</a></code> (average correlations within and between modules, and their ratio), <code><a href="reference/matrix_statistics.html">autonomy()</a></code> and <code><a href="reference/matrix_statistics.html">mean_autonomy()</a></code> (Hansen &amp; Houle 2008), <code><a href="reference/matrix_statistics.html">eigen_variance()</a></code> (proportion of variance per principal component), and <code><a href="reference/statistics.html">mean_fitness()</a></code> and <code><a href="reference/genomes.html">local_effects()</a></code> for the population itself.</p>
 </div>
 <div class="section level3">
 <h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -144,7 +166,7 @@
 </li>
 <li>Command-line examples in <code>system.file("examples", package = "evomod2")</code>: <code>corridor_selection.R</code>, <code>corridor_linkage.R</code>, <code>melo_marroig_2015.R</code>, <code>fluctuating_environments.R</code>, <code>jones_burger_arnold_2014.R</code>.</li>
 </ul>
-<p>Install with <code>remotes::install_github("diogro/evomod2", build_vignettes = TRUE)</code> to get the vignettes.</p>
+<p>All of them are also on the website, <a href="https://diogro.github.io/evomod2/" class="uri">https://diogro.github.io/evomod2/</a>, or install with <code>remotes::install_github("diogro/evomod2", build_vignettes = TRUE)</code> to get them locally.</p>
 </div>
 <div class="section level3">
 <h3 id="the-model">The model<a class="anchor" aria-label="anchor" href="#the-model"></a>
@@ -158,7 +180,7 @@
 <li>
 <code><a href="reference/architectures.html">additive()</a></code>: <code>x = Σ Y_l</code>.</li>
 <li>
-<code><a href="reference/architectures.html">multilinear()</a></code>: <code>x = S + Σ_{i&lt;j} ε(Y_i, Y_j)</code> with <code>S = Σ Y_l</code> and a <code>traits × traits × traits</code> tensor <code>ε</code> shared by all pairs of loci (Hansen &amp; Wagner 2001).</li>
+<code><a href="reference/architectures.html">multilinear()</a></code>: <code>x = S + Σ_{i&lt;j} ε(Y_i, Y_j)</code> with <code>S = Σ Y_l</code> and a <code>traits × traits × traits</code> tensor <code>ε</code> shared by all pairs of loci (Hansen &amp; Wagner 2001; <code><a href="reference/random_epsilon.html">random_epsilon()</a></code>), or a different tensor for every pair of loci (Jones, Bürger &amp; Arnold 2014; <code><a href="reference/pairwise_epsilon.html">pairwise_epsilon()</a></code>).</li>
 <li>
 <code><a href="reference/architectures.html">contribution_matrix()</a></code>: the model of do O &amp; Whitlock (2023), <code>x = C a</code> with weight genes <code>a</code> and contribution genes <code>C</code> as separate loci, used with <code><a href="reference/mutation.html">contribution_mutation()</a></code>.</li>
 <li>
@@ -170,13 +192,13 @@
 <li>
 <strong>Life cycle</strong>: discrete generations (<code><a href="reference/life_cycles.html">wright_fisher()</a></code>, the default) or overlapping generations (<code><a href="reference/life_cycles.html">moran()</a></code>: a generation is <code>n</code> birth-death events, each replacing a random individual by the offspring of two parents drawn in proportion to fitness), or the life cycle of Jones et al. (<code><a href="reference/life_cycles.html">viability_selection()</a></code>: separate sexes, females mating with several males, viability selection on zygotes); <code>evomod_model(..., life_cycle = moran())</code>.</li>
 <li>
-<strong>Mutation</strong>: a mutation replaces an allele’s effect <code>e</code> by <code>persistence * e + draw</code>; <code>persistence = 1</code> (default) is a random walk, <code>0</code> the house of cards model (<code><a href="reference/mutation.html">hoc_mutation()</a></code>), for every architecture.</li>
+<strong>Mutation</strong>: each allele mutates with probability <code>rate</code> per generation (<code><a href="reference/mutation.html">mutation()</a></code> adds a multivariate normal vector with covariance <code>cov</code>; <code><a href="reference/mutation.html">binary_b_mutation()</a></code> and <code><a href="reference/mutation.html">contribution_mutation()</a></code> have their own rates for each kind of gene). A mutation replaces an allele’s effect <code>e</code> by <code>persistence * e + draw</code>; <code>persistence = 1</code> (default) is a random walk, <code>0</code> the house of cards model (<code><a href="reference/mutation.html">hoc_mutation()</a></code>), for every architecture.</li>
 <li>
 <strong>Recombination</strong>: loci are unlinked by default. <code>genetic_map(chromosomes, length)</code> places loci evenly along chromosomes (Haldane map function), and <code>linkage(rates)</code> sets the recombination fraction between each pair of neighbouring loci; pass either as <code>evomod_model(..., recombination = )</code>.</li>
 <li>
 <strong>Regimes</strong>: <code><a href="reference/regimes.html">drift()</a></code>, <code><a href="reference/regimes.html">stabilizing()</a></code>, <code><a href="reference/regimes.html">directional()</a></code> (the optimum moves steadily) and <code><a href="reference/regimes.html">fluctuating()</a></code> (the optimum jumps up or down every few generations, all traits together, independently, or in blocks; do O &amp; Whitlock 2023).</li>
 <li>
-<strong>Each generation</strong>: the optimum moves (directional and fluctuating regimes), fitness <code>w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)</code> is computed, every individual mutates (each allele with probability <code>rate</code>, adding a <code>N(0, cov)</code> vector), and <code>n</code> offspring are produced from parents drawn with probability proportional to fitness, with free recombination.</li>
+<strong>Each generation</strong>: the optimum moves (directional and fluctuating regimes), fitness <code>w = exp(-(z - θ)' Ω⁻¹ (z - θ) / 2)</code> is computed, and the life cycle produces the next generation: with <code><a href="reference/life_cycles.html">wright_fisher()</a></code>, every individual mutates and <code>n</code> offspring are produced from parents drawn with probability proportional to fitness; with <code><a href="reference/life_cycles.html">moran()</a></code>, <code>n</code> birth-death events; with <code><a href="reference/life_cycles.html">viability_selection()</a></code>, matings, zygotes surviving with probability <code>w</code>, and regulation back to <code>n</code>. Offspring inherit alleles through the model’s recombination.</li>
 <li>
 <strong>Random numbers</strong> come from R’s generator: <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> or <code>seed</code> makes runs reproducible, and continuing a population gives the same result as a single run.</li>
 </ul>
@@ -202,14 +224,14 @@
 <td><code>Architecture</code></td>
 <td>genome → genotypic value, local effects</td>
 <td>
-<code>Additive</code>, <code>Multilinear</code>, <code>BinaryB</code>
+<code>Additive</code>, <code>Multilinear</code>, <code>MultilinearPairwise</code>, <code>BinaryB</code>, <code>ContributionMatrix</code>
 </td>
 </tr>
 <tr>
 <td><code>Mutation</code></td>
 <td>changes allelic effects</td>
 <td>
-<code>GaussianMutation</code>, <code>BinaryBMutation</code>
+<code>GaussianMutation</code>, <code>BinaryBMutation</code>, <code>ContributionMutation</code>
 </td>
 </tr>
 <tr>
@@ -226,6 +248,7 @@
 </tr>
 </tbody>
 </table>
+<p>Regimes and life cycles are handled in the generation loop (<code>evolve_cpp()</code> in <code>src/simulate.cpp</code>).</p>
 <p>To add, for example, a new architecture:</p>
 <ol style="list-style-type: decimal">
 <li>Derive a class from <code>Architecture</code> in <code>src/evomod.h</code> and implement <code>genotypic_value()</code> and <code><a href="reference/genomes.html">local_effects()</a></code> in <code>src/components.cpp</code>.</li>
@@ -233,15 +256,16 @@
 <li>Write the R constructor in <code>R/architecture.R</code>, returning <code>structure(list(type = "&lt;name&gt;", loci, traits, state_rows, mutation_type, ...), class = "evomod_architecture")</code>. <code>state_rows</code> is the number of rows of a genome (one column per allele): <code>traits</code> for an effect vector per allele, <code>traits + 1</code> for <code><a href="reference/architectures.html">binary_b()</a></code>. <code>mutation_type</code> is the mutation model the architecture works with; if the genome needs a special starting state, add it to <code>init_genomes()</code>.</li>
 <li>Add tests in <code>tests/testthat/</code> (compare with an explicit, slow R version of the same map), and, for new models, prototype and cross-check against EvoMod.jl.</li>
 </ol>
+<p><a href="DEVELOPMENT.html">DEVELOPMENT.md</a> describes the generation loop, the interfaces, random numbers, building and testing in more detail, and <a href="AGENTS.html">AGENTS.md</a> summarises how to use the package for AI coding agents.</p>
 </div>
 <div class="section level2">
 <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
 </h2>
 <p>The scripts in <code>validation/</code> run matching simulations in evomod2 and in an independent implementation, and compare replicate means of G matrices and trait means:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># additive and multilinear models against EvoMod.jl</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check.R path/to/evomod_julia 20</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co"># binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check_c.R path/to/evomod/c-gsl 100 8</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># additive and multilinear models against EvoMod.jl</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check.R path/to/evomod_julia 20</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># binary B model against the original C code (lem-usp/evomod, c-gsl; needs GSL)</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="ex">Rscript</span> validation/cross_check_c.R path/to/evomod/c-gsl 100 8</span></code></pre></div>
 <p>The C code moves the optimum after each generation and skips the first directional step, so under directional selection its trait means lag evomod2’s by about two generations of optimum movement.</p>
 </div>
 <div class="section level2">
