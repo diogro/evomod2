@@ -1,0 +1,52 @@
+url: https://diogro.github.io/evomod2/
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, articles, reference]
+    right: [search, github]
+
+articles:
+- title: Using evomod2
+  navbar: ~
+  contents:
+  - evomod2
+  - architectures
+  - mutation-models
+- title: Reproducing and testing published results
+  navbar: Published results
+  contents:
+  - melo-marroig-2015
+  - fluctuating-environments
+
+reference:
+- title: Models
+  desc: Genetic architectures, mutation, recombination and life cycles.
+  contents:
+  - evomod_model
+  - architectures
+  - random_epsilon
+  - mutation
+  - recombination
+  - life_cycles
+- title: Selection regimes and simulation
+  contents:
+  - regimes
+  - evolve
+  - plot.evomod_population
+- title: Recorded statistics and genomes
+  contents:
+  - statistics
+  - genomes
+- title: Analysis
+  desc: G matrix decomposition, mutational covariance and matrix statistics.
+  contents:
+  - g_decomposition
+  - shuffle_genomes
+  - mutational_covariance
+  - avg_corr
+  - matrix_statistics
+- title: Package
+  contents:
+  - evomod2-package

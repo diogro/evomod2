@@ -26,7 +26,7 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/diogro/evomod2
+URL: https://diogro.github.io/evomod2/, https://github.com/diogro/evomod2
 BugReports: https://github.com/diogro/evomod2/issues
 Config/roxygen2/version: 8.1.1
 VignetteBuilder: knitr
