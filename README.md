@@ -106,12 +106,15 @@ mutational_covariance(pop, n = 10000)
   selection and a moving optimum.
 * `vignette("melo-marroig-2015")`: reproducing the simulations of Melo &
   Marroig (2015), with results of a full run.
+* `vignette("jones-burger-arnold-2014")`: reproducing Jones, Bürger &
+  Arnold (2014) on the evolution of the mutational matrix M under epistasis,
+  with results of a full run.
 * `vignette("fluctuating-environments")`: the claims of do O & Whitlock
   (2023) about fluctuating optima, tested on four genetic architectures,
   with results of a full run.
 * Command-line examples in `system.file("examples", package = "evomod2")`:
   `corridor_selection.R`, `corridor_linkage.R`, `melo_marroig_2015.R`,
-  `fluctuating_environments.R`.
+  `fluctuating_environments.R`, `jones_burger_arnold_2014.R`.
 
 Install with `remotes::install_github("diogro/evomod2", build_vignettes = TRUE)`
 to get the vignettes.

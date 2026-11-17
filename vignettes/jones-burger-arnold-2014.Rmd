@@ -1,0 +1,227 @@
+---
+title: "Reproducing Jones, Bürger & Arnold (2014)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reproducing Jones, Bürger & Arnold (2014)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4.2)
+summary_file <- Sys.getenv("EVOMOD2_JBA_SUMMARY",
+                          system.file("extdata", "jones_burger_arnold_2014.rds", package = "evomod2"))
+has_results <- nzchar(summary_file) && requireNamespace("ggplot2", quietly = TRUE)
+```
+
+Jones, Bürger & Arnold (2014, *Nature Communications* 5: 3709,
+[doi:10.1038/ncomms4709](https://doi.org/10.1038/ncomms4709)) asked how
+epistasis and selection shape the mutational variance-covariance matrix,
+**M**. With epistasis, the effect of a new mutation depends on the genetic
+background, so M can evolve. They found that
+
+* epistasis inflates mutational variance;
+* correlational selection makes M correlated, aligned with the selection
+  surface, but only when there is epistasis: without it M is fixed;
+* smaller populations evolve larger mutational variances;
+* the leading eigenvectors of M, G and the selection surface (omega) align;
+* in large populations, loci with larger effects have more negative epistatic
+  coefficients.
+
+This vignette repeats their simulations with evomod2. They take about an hour
+of computing in total, so the vignette shows results stored in the package;
+the script `jones_burger_arnold_2014.R` in
+`system.file("examples", package = "evomod2")` runs them.
+
+## Model
+
+Two traits are affected by 20 unlinked diploid loci. Each locus has a
+reference effect vector (the sum of its two alleles), and every pair of loci
+interacts through its own random tensor of epistatic coefficients, drawn once
+per run from a normal distribution with mean 0 and variance `σε²`:
+
+    x = Σ_i y_i + Σ_{i<j} ε_ij(y_i, y_j)
+
+In evomod2 this is `multilinear()` with coefficients from
+`pairwise_epsilon()`:
+
+```{r, eval = FALSE}
+library(evomod2)
+sigma2 <- 1                       # variance of epistatic coefficients
+r_omega <- 0.9                    # correlation of the selection surface
+model <- evomod_model(
+  multilinear(loci = 20, traits = 2, epsilon = pairwise_epsilon(20, 2, sd = sqrt(sigma2))),
+  mutation(rate = 0.0005, cov = diag(0.05, 2)),   # added to reference effects
+  env_sd = 1)
+omega <- 49 * matrix(c(1, r_omega, r_omega, 1), 2)
+pop <- evolve(model, stabilizing(10000, omega = omega), n = 512)
+additive_covariance(pop)          # G and its additive part
+mutational_covariance(pop)        # M: effects of single new mutations
+```
+
+Parameters follow their Table 1: mutational variance 0.05 per trait (no
+mutational correlation), `μ = 0.0005` per locus, `ω11 = ω22 = 49`,
+environmental variance 1, `N = 512`; each locus starts with five equally
+frequent alleles of small effect; 5000 generations of burn-in, then 5000 in
+which G, its additive part and M are measured 20 times and averaged; 20 runs
+per setting.
+
+Two things differ from their simulations:
+
+* **Reproduction.** evomod2 draws parents in proportion to fitness each
+  generation (Wright-Fisher). In their model each female mated with two males
+  and had four offspring, followed by viability selection and regulation to
+  `K` individuals; offspring numbers vary differently, so the effective
+  population size is not exactly the same.
+* **Additive variance.** They estimated it from a half-sib design; here it is
+  the least-squares additive covariance (`additive_covariance()`), the
+  variance of the best linear prediction of genotypic values from the loci.
+
+```{r, include = FALSE, eval = has_results}
+library(ggplot2)
+res <- readRDS(summary_file)
+theme_set(theme_minimal())
+avg <- function(d, by, vars = c("VG11", "VG22", "rG", "VA11", "VA22", "rA", "M11", "M22", "rM")) {
+  a <- aggregate(d[vars], d[by], mean)
+  a[order(a[[by[1]]], a[[by[2]]]), ]
+}
+# our mean of `v` for each row of `keys` (matched on the key columns)
+lookup <- function(keys, ours, v) {
+  k <- function(d) do.call(paste, d[names(keys)])
+  ours[[v]][match(k(keys), k(ours))]
+}
+```
+
+## Epistasis and correlational selection (their Table 2)
+
+Means over 20 runs, `N = 512`, for each variance of the epistatic
+coefficients (`sigma2`) and selective correlation (`r_omega`):
+
+```{r, eval = has_results}
+t2 <- avg(res$table2, c("sigma2", "r_omega"))
+knitr::kable(t2, digits = 3, row.names = FALSE)
+```
+
+Published values for some of the same settings (their Table 2, `N = 512`):
+
+```{r, eval = has_results}
+published2 <- data.frame(
+  sigma2 = c(0, 0, 1, 1, 0.1, 0.1, 0.1, 10, 10),
+  r_omega = c(0, 0.9, 0, 0.9, 0.5, 0.75, 0.9, 0, 0.9),
+  M11 = c(0.05, 0.05, 0.267, 0.168, NA, NA, NA, 0.565, 0.282),
+  rM = c(0, 0, -0.002, 0.141, 0.038, 0.095, 0.120, 0.005, 0.074),
+  VG11 = c(0.53, 0.30, NA, 0.31, NA, NA, NA, NA, NA),
+  rG = c(NA, 0.420, NA, 0.441, NA, NA, NA, NA, NA))
+keys <- published2[c("sigma2", "r_omega")]
+knitr::kable(data.frame(keys,
+                        M11 = published2$M11, M11_evomod2 = lookup(keys, t2, "M11"),
+                        rM = published2$rM, rM_evomod2 = lookup(keys, t2, "rM"),
+                        VG11 = published2$VG11, VG11_evomod2 = lookup(keys, t2, "VG11")),
+             digits = 3, row.names = FALSE)
+```
+
+```{r, eval = has_results}
+d <- res$table2
+d$sigma2 <- factor(d$sigma2)
+ggplot(d, aes(r_omega, rM, colour = sigma2)) +
+  stat_summary(fun.data = mean_se, position = position_dodge(width = 0.05)) +
+  stat_summary(fun = mean, geom = "line", position = position_dodge(width = 0.05)) +
+  geom_hline(yintercept = 0, colour = "grey70") +
+  labs(x = "Selective correlation (r_omega)", y = "Mutational correlation (r_M)",
+       colour = "Epistatic\nvariance")
+```
+
+## Population size (their Table 3 and Fig. 1)
+
+Means over 20 runs, with `σε² = 1`:
+
+```{r, eval = has_results}
+t3 <- avg(res$table3, c("N", "r_omega"))
+knitr::kable(t3, digits = 3, row.names = FALSE)
+```
+
+Published values (their Table 3, `σε² = 1`):
+
+```{r, eval = has_results}
+published3 <- data.frame(
+  N = c(128, 256, 512, 1024, 2048, 128, 2048, 128, 2048, 128, 256, 512, 1024, 2048),
+  r_omega = c(rep(0.9, 5), 0, 0, 0.5, 0.5, rep(0.75, 5)),
+  M11 = c(0.425, NA, NA, 0.112, 0.095, 0.710, 0.139, rep(NA, 7)),
+  rM = c(0.081, 0.135, 0.147, 0.163, 0.177, 0.018, -0.012, 0.109, 0.065,
+         0.029, 0.102, 0.113, 0.105, 0.097))
+keys <- published3[c("N", "r_omega")]
+knitr::kable(data.frame(keys,
+                        M11 = published3$M11, M11_evomod2 = lookup(keys, t3, "M11"),
+                        rM = published3$rM, rM_evomod2 = lookup(keys, t3, "rM")),
+             digits = 3, row.names = FALSE)
+```
+
+```{r, eval = has_results}
+d <- res$table3
+d$r_omega <- factor(d$r_omega)
+long <- rbind(data.frame(d[c("N", "r_omega")], what = "Mutational variance (M11)", value = d$M11),
+              data.frame(d[c("N", "r_omega")], what = "Additive variance (VA11)", value = d$VA11))
+ggplot(long, aes(N, value, colour = r_omega)) +
+  stat_summary(fun.data = mean_se) +
+  stat_summary(fun = mean, geom = "line") +
+  scale_x_log10(breaks = c(128, 256, 512, 1024, 2048)) +
+  facet_wrap(~ what, scales = "free_y") +
+  labs(x = "Population size", y = NULL, colour = "r_omega")
+```
+
+## Alignment of M, G and omega (their Fig. 2)
+
+`N = 4096`, `σε² = 1`, and a selection surface with the shape of
+`r_omega = 0.9` rotated to a different orientation in each run. Angles
+between leading eigenvectors (0 means aligned, 90 perpendicular):
+
+```{r, eval = has_results}
+f2 <- res$fig2
+angles <- data.frame(pair = rep(c("G and omega", "M and omega", "M and G"), each = nrow(f2)),
+                     angle = c(f2$angle_G_omega, f2$angle_M_omega, f2$angle_M_G))
+ggplot(angles, aes(pair, angle)) +
+  geom_boxplot(outlier.shape = NA, width = 0.4) +
+  geom_jitter(width = 0.1, alpha = 0.6) +
+  labs(x = NULL, y = "Angle between leading eigenvectors (degrees)")
+summary(f2[c("angle_G_omega", "angle_M_omega", "angle_M_G", "G_ratio", "M_ratio")])
+```
+
+`G_ratio` and `M_ratio` are the ratios of the largest to the smallest
+eigenvalue (elongation); omega has a ratio of 19.
+
+## Allelic effects and epistatic coefficients (their Fig. 3)
+
+Ten loci, epistasis only within trait 1. For each locus: its mean reference
+effect on trait 1 in the evolved population, against the mean of its
+epistatic coefficients with the other loci:
+
+```{r, eval = has_results}
+f3 <- res$fig3
+f3$N <- factor(f3$N)
+ggplot(f3, aes(epistasis, effect)) +
+  geom_hline(yintercept = 0, colour = "grey80") +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  facet_wrap(~ N, labeller = label_both) +
+  labs(x = "Mean epistatic coefficient of the locus", y = "Mean reference effect on trait 1")
+sapply(split(f3, f3$N), function(d) {
+  fit <- summary(lm(effect ~ epistasis, d))
+  c(slope = coef(fit)[2, 1], R2 = fit$r.squared, p = coef(fit)[2, 4])
+})
+```
+
+Jones et al. report R² = 0.01 (p = 0.09) for `N = 128` and R² = 0.22
+(p << 0.0001) for `N = 2048`. Their exact definition of a locus's allelic
+effect and epistatic coefficient is in their Supplementary Information; the
+one used here is described above.
+
+## Running it
+
+```sh
+script=$(Rscript -e 'cat(system.file("examples", "jones_burger_arnold_2014.R", package = "evomod2"))')
+Rscript $script table2 1 0.9 1 results     # sigma_e^2, r_omega, replicate
+Rscript $script table3 512 0.9 1 results   # N, r_omega, replicate
+Rscript $script fig2 1 results
+Rscript $script fig3 2048 1 results
+Rscript $script summarise results jones_burger_arnold_2014.rds
+```
