@@ -56,6 +56,56 @@ arma::mat Multilinear::local_effects(const arma::mat& alleles) const {
   return L;
 }
 
+// ---- MultilinearPairwise ----------------------------------------------------------
+
+arma::vec MultilinearPairwise::pair_term(arma::uword pair, const arma::vec& a,
+                                         const arma::vec& b) const {
+  arma::uword p = a.n_elem;
+  arma::vec out(p);
+  for (arma::uword k = 0; k < p; ++k)
+    out[k] = arma::as_scalar(a.t() * slices_.slice(pair * p + k) * b);
+  return out;
+}
+
+arma::vec MultilinearPairwise::genotypic_value(const arma::mat& alleles) const {
+  arma::mat Y = locus_effects(alleles);
+  arma::uword L = Y.n_cols, p = Y.n_rows;
+  arma::vec x = arma::sum(Y, 1);
+  // plain loops: sum_k x[k] += sum_{a,b} E_ijk(a, b) Y_i[a] Y_j[b]
+  arma::uword pair = 0;
+  for (arma::uword i = 0; i < L; ++i) {
+    const double* yi = Y.colptr(i);
+    for (arma::uword j = i + 1; j < L; ++j, ++pair) {
+      const double* yj = Y.colptr(j);
+      for (arma::uword k = 0; k < p; ++k) {
+        const double* E = slices_.slice_memptr(pair * p + k);   // column-major p x p
+        double t = 0;
+        for (arma::uword b = 0; b < p; ++b) {
+          double row = 0;
+          for (arma::uword a = 0; a < p; ++a) row += E[b * p + a] * yi[a];
+          t += row * yj[b];
+        }
+        x[k] += t;
+      }
+    }
+  }
+  return x;
+}
+
+arma::mat MultilinearPairwise::local_effects(const arma::mat& alleles) const {
+  arma::mat Y = locus_effects(alleles);
+  arma::uword L = Y.n_cols;
+  arma::mat out = Y;
+  arma::uword pair = 0;
+  for (arma::uword i = 0; i < L; ++i)
+    for (arma::uword j = i + 1; j < L; ++j, ++pair) {
+      arma::vec t = pair_term(pair, Y.col(i), Y.col(j));
+      out.col(i) += t;   // the pair term vanishes when either locus is at 0
+      out.col(j) += t;
+    }
+  return out;
+}
+
 // ---- BinaryB -----------------------------------------------------------------
 
 arma::vec BinaryB::genotypic_value(const arma::mat& alleles) const {
@@ -245,6 +295,9 @@ std::unique_ptr<Architecture> make_architecture(const Rcpp::List& spec) {
   if (type == "contribution_matrix")
     return std::unique_ptr<Architecture>(new ContributionMatrix(
       Rcpp::as<arma::uword>(spec["traits"]), Rcpp::as<arma::uword>(spec["genes"])));
+  if (type == "multilinear_pairwise")
+    return std::unique_ptr<Architecture>(new MultilinearPairwise(
+      Rcpp::as<arma::cube>(spec["pair_slices"])));
   if (type == "multilinear") {
     arma::cube epsilon = Rcpp::as<arma::cube>(spec["epsilon_slices"]);
     return std::unique_ptr<Architecture>(new Multilinear(epsilon));

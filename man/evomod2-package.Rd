@@ -21,6 +21,7 @@ README.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://diogro.github.io/evomod2/}
   \item \url{https://github.com/diogro/evomod2}
   \item Report bugs at \url{https://github.com/diogro/evomod2/issues}
 }

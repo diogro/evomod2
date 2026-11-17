@@ -225,6 +225,51 @@ shuffle_genomes <- function(alleles) {
   out
 }
 
+#' Additive genetic covariance
+#'
+#' Least-squares additive genetic (co)variance of the current population: the
+#' covariance matrix of the best linear prediction of genotypic values from
+#' the state of every locus (the sum of its two alleles: their effect vectors,
+#' or for [binary_b()] their effects `B y`, or for [contribution_matrix()] the
+#' gene values). For the architectures in evomod2 the genotypic value is
+#' linear in the state of each locus given the others, so this is the
+#' additive variance in the usual sense (variance of breeding values) under
+#' linkage equilibrium. `G - additive` is the non-additive (epistatic)
+#' covariance. Needs more individuals than loci times traits.
+#'
+#' @param pop an `evomod_population`.
+#' @return A list with `G`, `additive` and `nonadditive` (`G - additive`), all
+#'   with the `n - 1` denominator of [stats::cov()].
+#' @examples
+#' eps <- pairwise_epsilon(loci = 10, traits = 2, sd = 1)
+#' m <- evomod_model(multilinear(10, 2, eps), mutation(0.01, 0.2), env_sd = 1, init_sd = 0.1)
+#' pop <- evolve(m, stabilizing(200, omega = 20), n = 300, seed = 1)
+#' additive_covariance(pop)
+#' @export
+additive_covariance <- function(pop) {
+  arch <- pop$model$architecture
+  g <- genomes(pop)
+  n <- dim(g)[3]
+  L <- dim(g)[2] / 2
+  # state of every locus in every individual: n x (loci * rows)
+  pred <- t(vapply(seq_len(n), function(i) {
+    gi <- matrix(g[, , i], nrow = dim(g)[1])
+    if (arch$type == "binary_b") gi <- gi[-1, , drop = FALSE] * rep(gi[1, ], each = nrow(gi) - 1)
+    as.vector(gi[, c(TRUE, FALSE), drop = FALSE] + gi[, c(FALSE, TRUE), drop = FALSE])
+  }, numeric(L * (if (arch$type == "binary_b") dim(g)[1] - 1 else dim(g)[1]))))
+  if (ncol(pred) + 1 >= n)
+    stop("additive_covariance() needs more individuals than loci x traits (", ncol(pred), ")",
+         call. = FALSE)
+  X <- t(pop$x)
+  fit <- stats::lm.fit(cbind(1, pred), X)
+  fitted <- as.matrix(X - fit$residuals)
+  G <- stats::cov(X)
+  A <- stats::cov(fitted)
+  nm <- trait_names(pop)
+  dimnames(G) <- dimnames(A) <- list(nm, nm)
+  list(G = G, additive = A, nonadditive = G - A)
+}
+
 #' Mutational covariance
 #'
 #' Effects of new mutations on genotypic values in the current population.

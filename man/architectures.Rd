@@ -42,8 +42,13 @@ the model's \code{init_sd}: \code{"normal"}, \code{Normal(0, init_sd)} for every
 by default ones on the diagonal (gene \code{j} affects trait \code{j} only, the
 identity when \code{genes == traits}).}
 
-\item{epsilon}{epistasis tensor, a \verb{traits x traits x traits} array
-(see \code{\link[=random_epsilon]{random_epsilon()}}).}
+\item{epsilon}{epistasis coefficients: a \verb{traits x traits x traits} array
+shared by all pairs of loci (symmetric in its last two indices; see
+\code{\link[=random_epsilon]{random_epsilon()}}), or a \verb{traits x traits x traits x loci x loci} array
+with a different tensor for every pair of loci, as in Jones, Burger &
+Arnold (2014) (see \code{\link[=pairwise_epsilon]{pairwise_epsilon()}}). For the pairwise form,
+\code{epsilon[k, a, b, i, j]} multiplies \verb{Y_i[a] Y_j[b]} in trait \code{k}, and only
+entries with \code{i < j} are used.}
 }
 \value{
 An \code{evomod_architecture} object.
@@ -72,6 +77,9 @@ genes; locus \code{genes + (j - 1) * traits + i} is \code{c_ij}. Use with
 \code{\link[=contribution_mutation]{contribution_mutation()}}. New populations start with every individual
 at \code{init_weights} and \code{init_contributions} (each allele half of the
 locus value), plus \code{Normal(0, init_sd)} noise on every allele.
+\item \code{multilinear()} with a pairwise \code{epsilon} (\code{\link[=pairwise_epsilon]{pairwise_epsilon()}}): a
+different tensor for every pair of loci (Jones, Burger & Arnold 2014),
+\verb{x = S + sum_\{i<j\} eps_ij(Y_i, Y_j)}.
 \item \code{multilinear()}: pairwise multilinear epistasis (Hansen & Wagner 2001),
 \verb{x = S + sum_\{i<j\} eps(Y_i, Y_j)}, with \verb{S = sum_l Y_l} and
 \verb{eps(a, b)[k] = sum_\{l,m\} epsilon[k, l, m] a[l] b[m]}. The same tensor is

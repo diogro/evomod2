@@ -66,6 +66,21 @@ private:
   arma::vec bilinear(const arma::vec& a, const arma::vec& b) const;
 };
 
+// Pairwise multilinear epistasis with a different tensor for every pair of
+// loci (Jones, Burger & Arnold 2014): x = S + sum_{i<j} eps_ij(Y_i, Y_j), with
+// eps_ij(a, b)[k] = a' E_ijk b. slices(:, :, pair * p + k) is E_ijk, pairs
+// ordered (0,1), (0,2), ..., (0,L-1), (1,2), ...; no symmetry is required.
+class MultilinearPairwise : public Architecture {
+public:
+  explicit MultilinearPairwise(const arma::cube& slices) : slices_(slices) {}
+  arma::vec genotypic_value(const arma::mat& alleles) const override;
+  arma::mat local_effects(const arma::mat& alleles) const override;
+private:
+  arma::cube slices_;
+  // eps_ij(a, b) for the pair with index `pair`
+  arma::vec pair_term(arma::uword pair, const arma::vec& a, const arma::vec& b) const;
+};
+
 // Binary ontogenetic matrix (Melo & Marroig 2015): row 0 holds the allelic
 // effects y, rows 1..p the binary matrix B (traits x alleles); x = B y.
 class BinaryB : public Architecture {

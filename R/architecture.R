@@ -21,6 +21,9 @@
 #'   [contribution_mutation()]. New populations start with every individual
 #'   at `init_weights` and `init_contributions` (each allele half of the
 #'   locus value), plus `Normal(0, init_sd)` noise on every allele.
+#' * `multilinear()` with a pairwise `epsilon` ([pairwise_epsilon()]): a
+#'   different tensor for every pair of loci (Jones, Burger & Arnold 2014),
+#'   `x = S + sum_{i<j} eps_ij(Y_i, Y_j)`.
 #' * `multilinear()`: pairwise multilinear epistasis (Hansen & Wagner 2001),
 #'   `x = S + sum_{i<j} eps(Y_i, Y_j)`, with `S = sum_l Y_l` and
 #'   `eps(a, b)[k] = sum_{l,m} epsilon[k, l, m] a[l] b[m]`. The same tensor is
@@ -28,8 +31,13 @@
 #'
 #' @param loci number of diploid loci.
 #' @param traits number of traits.
-#' @param epsilon epistasis tensor, a `traits x traits x traits` array
-#'   (see [random_epsilon()]).
+#' @param epsilon epistasis coefficients: a `traits x traits x traits` array
+#'   shared by all pairs of loci (symmetric in its last two indices; see
+#'   [random_epsilon()]), or a `traits x traits x traits x loci x loci` array
+#'   with a different tensor for every pair of loci, as in Jones, Burger &
+#'   Arnold (2014) (see [pairwise_epsilon()]). For the pairwise form,
+#'   `epsilon[k, a, b, i, j]` multiplies `Y_i[a] Y_j[b]` in trait `k`, and only
+#'   entries with `i < j` are used.
 #' @param genes number of weight genes.
 #' @param init_weights starting values of the weight genes (one per gene).
 #' @param init_contributions starting contribution matrix (`traits x genes`);
@@ -99,7 +107,21 @@ multilinear <- function(loci, traits, epsilon) {
   check_count(loci, "loci")
   check_count(traits, "traits")
   p <- as.integer(traits)
+  L <- as.integer(loci)
   epsilon <- as.array(epsilon)
+  if (length(dim(epsilon)) == 5) {
+    if (!is.numeric(epsilon) || !identical(dim(epsilon), c(p, p, p, L, L)))
+      stop("pairwise `epsilon` must be a numeric ", p, " x ", p, " x ", p, " x ", L, " x ", L,
+           " array", call. = FALSE)
+    pairs <- which(upper.tri(diag(L)), arr.ind = TRUE)
+    pairs <- pairs[order(pairs[, 1], pairs[, 2]), , drop = FALSE]   # (1,2), (1,3), ..., (2,3), ...
+    slices <- array(0, c(p, p, p * nrow(pairs)))
+    for (q in seq_len(nrow(pairs))) for (k in seq_len(p))
+      slices[, , (q - 1) * p + k] <- epsilon[k, , , pairs[q, 1], pairs[q, 2]]
+    return(structure(list(type = "multilinear_pairwise", loci = L, traits = p, state_rows = p,
+                          mutation_type = "gaussian", epsilon = epsilon, pair_slices = slices),
+                     class = "evomod_architecture"))
+  }
   if (!is.numeric(epsilon) || !identical(dim(epsilon), c(p, p, p)))
     stop("`epsilon` must be a numeric ", p, " x ", p, " x ", p, " array")
   for (k in seq_len(p))
@@ -110,6 +132,42 @@ multilinear <- function(loci, traits, epsilon) {
                  # slice k (third index) is epsilon[k, , ], as the C++ code expects
                  epsilon_slices = aperm(epsilon, c(2, 3, 1))),
             class = "evomod_architecture")
+}
+
+#' Random pairwise epistasis coefficients
+#'
+#' A different epistasis tensor for every pair of loci, with entries drawn
+#' from `Normal(mean, sd)`, as in Jones, Burger & Arnold (2014), where the
+#' variance of the coefficients is `sd^2`. With `within_trait = TRUE` only the
+#' coefficients for interactions of a trait with itself (`epsilon[k, k, k, i, j]`)
+#' are non-zero; `traits_with_epistasis` restricts epistasis to some traits.
+#'
+#' @param loci number of loci.
+#' @param traits number of traits.
+#' @param sd,mean standard deviation and mean of the coefficients.
+#' @param within_trait only interactions of each trait with itself.
+#' @param traits_with_epistasis traits whose values have epistatic terms.
+#' @return A `traits x traits x traits x loci x loci` array (zero for `i >= j`),
+#'   for [multilinear()].
+#' @examples
+#' eps <- pairwise_epsilon(loci = 10, traits = 2, sd = 1)
+#' multilinear(loci = 10, traits = 2, epsilon = eps)
+#' @export
+pairwise_epsilon <- function(loci, traits, sd = 1, mean = 0, within_trait = FALSE,
+                             traits_with_epistasis = seq_len(traits)) {
+  p <- as.integer(traits); L <- as.integer(loci)
+  e <- array(0, c(p, p, p, L, L))
+  for (i in seq_len(L - 1)) for (j in (i + 1):L) {
+    t <- array(stats::rnorm(p^3, mean, sd), c(p, p, p))
+    if (within_trait) {
+      keep <- array(0, c(p, p, p))
+      for (k in seq_len(p)) keep[k, k, k] <- 1
+      t <- t * keep
+    }
+    t[setdiff(seq_len(p), traits_with_epistasis), , ] <- 0
+    e[, , , i, j] <- t
+  }
+  e
 }
 
 #' Random epistasis tensor
