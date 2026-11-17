@@ -152,14 +152,15 @@ summarise_runs <- function(outdir, file) {
   trace <- do.call(rbind, lapply(runs, function(r) fill(r$trace)))
   # keep full traces for the burn-in and maintenance runs; the final
   # generation for the rest
-  last <- ave(trace$generation, trace$experiment, trace$rate, trace$replicate, trace$regime,
-              FUN = max)
-  trace <- trace[trace$experiment %in% c("burnin", "maintenance") | trace$generation == last, ]
+  # (regime is NA outside maintenance runs; ave() would skip NA groups)
+  run_id <- paste(trace$experiment, trace$rate, trace$replicate, trace$regime)
+  last <- ave(trace$generation, run_id, FUN = max)
+  trace <- trace[trace$experiment == "burnin" | trace$generation == last |
+                   (trace$experiment == "maintenance" & trace$generation %% 200 == 0), ]
   burnin <- runs[[which(vapply(runs, function(r) r$info$experiment == "burnin", TRUE))]]
   summary <- list(
     statistics = trace,
     burnin_h2 = burnin$h2,
-    final_P = lapply(runs, function(r) list(info = fill(r$info), P = r$final_P, G = r$final_G)),
     settings = list(traits = TRAITS, loci = LOCI, n = N, mu = MU, mu_b = MU_B, sigma = SIGMA,
                     v_e = V_E, v_omega = V_OMEGA, r_omega = R_OMEGA, generations = GENERATIONS,
                     record_every = RECORD_EVERY, rates = RATES,

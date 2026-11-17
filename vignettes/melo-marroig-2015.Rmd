@@ -218,6 +218,59 @@ ggplot(ms, aes(generation, mean, colour = regime, fill = regime)) +
   theme(legend.position = "bottom")
 ```
 
+## How the reproduction compares
+
+```{r, include = FALSE, eval = has_results}
+fm <- function(exp, rate, v) mean(P[P$experiment == exp & abs(P$rate - rate) < 1e-9, v])
+mm <- function(regime, gen) mean(P$avg_ratio[P$experiment == "maintenance" & P$regime == regime &
+                                              P$generation == gen])
+f <- function(x, d = 2) { x <- round(x, d); x[x == 0] <- 0; formatC(x, format = "f", digits = d) }
+rates <- range(P$rate[P$experiment == "divergent"])
+```
+
+```{r, echo = FALSE, results = "asis", eval = has_results}
+cat(sprintf("
+* **Before directional selection there is no modularity**: at the end of the
+  burn-in the AVG ratio is about 1, and heritabilities are %s-%s (0.3-0.5 in
+  the paper).
+* **Divergent selection produces modularity, more so when the optimum moves
+  faster** (Fig. 2): from a peak movement rate of %s to %s per generation, the
+  AVG ratio rises from %s to %s, the correlation between modules falls from %s
+  to %s, the proportion of variance on the second principal component (the
+  contrast between modules) rises from %s%% to %s%%, and the autonomy in the
+  direction of module 1 rises from %s to %s while the mean autonomy stays at
+  about %s.
+* **Corridor selection integrates the selected module** (Fig. 3): the
+  correlation within module 1 rises from %s to %s, the module under
+  stabilizing selection stays at about %s (the paper describes a slight
+  increase), and correlations between modules fall from %s to %s.
+* **Once established, modularity is kept by correlated stabilizing selection
+  and lost under drift** (Fig. 4): starting from an AVG ratio of %s, after
+  10,000 generations it is %s under correlated stabilizing selection, %s
+  under uncorrelated stabilizing selection and %s under drift.
+* The paper reports that between-module correlations drop to nearly zero
+  under strong selection; here they reach %s. All phenotypic correlations are
+  low in this model, because environmental variance makes up about two thirds
+  of the phenotypic variance.
+",
+  f(min(res$burnin_h2$h2)), f(max(res$burnin_h2$h2)),
+  formatC(rates[1], format = "f", digits = 4), formatC(rates[2], format = "f", digits = 4),
+  f(fm("divergent", rates[1], "avg_ratio")), f(fm("divergent", rates[2], "avg_ratio")),
+  f(fm("divergent", rates[1], "between"), 3), f(fm("divergent", rates[2], "between"), 3),
+  f(100 * fm("divergent", rates[1], "eigen_2"), 1), f(100 * fm("divergent", rates[2], "eigen_2"), 1),
+  f(fm("divergent", rates[1], "autonomy_module")), f(fm("divergent", rates[2], "autonomy_module")),
+  f(mean(P$autonomy_mean[P$experiment == "divergent"])),
+  f(fm("corridor", rates[1], "within_1")), f(fm("corridor", rates[2], "within_1")),
+  f(mean(P$within_2[P$experiment == "corridor"])),
+  f(fm("corridor", rates[1], "between")), f(fm("corridor", rates[2], "between")),
+  f(mm("correlated", 0)), f(mm("correlated", 10000)), f(mm("uncorrelated", 10000)), f(mm("drift", 10000)),
+  f(fm("divergent", rates[2], "between"))))
+```
+
+The stored results have fewer replicate populations than the paper for the
+maintenance experiment (20 per regime instead of 100), and the maintenance
+traces are thinned to every 200 generations.
+
 ## Running it yourself
 
 ```sh
